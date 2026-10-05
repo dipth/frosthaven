@@ -6,6 +6,7 @@
  */
 import { Settings, type GameModel } from '@fh/ghs-core';
 import { crossoverFromGhs, crossoverToGhs } from './crossover';
+import { rulesFromGhsSettings } from './rules';
 import { loadGhs, snapshotGhs } from './runtime';
 import { emptyExt, type CampaignState } from './state';
 
@@ -51,10 +52,13 @@ export function normalizeGameModel(game: GameModel): GameModel {
   return snapshotGhs();
 }
 
-export function campaignFromGhs(game: GameModel): CampaignState {
+export function campaignFromGhs(game: GameModel, settings?: Record<string, unknown>): CampaignState {
   const converted = structuredClone(game);
   const unverified = crossoverFromGhs(converted);
   const ext = emptyExt();
+  if (settings) {
+    ext.rules = rulesFromGhsSettings(settings);
+  }
   if (unverified.length) {
     ext.crossoverPerksToVerify = unverified;
   }

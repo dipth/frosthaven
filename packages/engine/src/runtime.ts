@@ -1,5 +1,6 @@
 import { gameManager, type Game, type GameManager, type GameModel } from '@fh/ghs-core';
 import type { z } from 'zod';
+import { applyRules, type CampaignRules } from './rules';
 import type { CampaignState, ExtState } from './state';
 
 export interface CommandContext {
@@ -49,7 +50,8 @@ export interface ExecuteResult {
 }
 
 /** Loads a GameModel into the GHS singletons, starting from fresh figure objects. */
-export function loadGhs(model: GameModel) {
+export function loadGhs(model: GameModel, rules?: CampaignRules) {
+  applyRules(rules);
   gameManager.stateManager.reset();
   gameManager.game.figures = [];
   gameManager.game.fromModel(structuredClone(model));
@@ -72,7 +74,7 @@ export function runCommand<S extends z.ZodType>(
   }
   def.authorize?.(state, parsed.data, ctx);
 
-  loadGhs(state.ghs);
+  loadGhs(state.ghs, state.ext.rules);
   const ext = structuredClone(state.ext);
   const messages: string[] = [];
   def.run({ gm: gameManager, game: gameManager.game, ext, log: (m) => messages.push(m) }, parsed.data, ctx);

@@ -9,6 +9,7 @@ import type { RoomData } from '@fh/ghs-core/vendor/game/model/data/RoomData';
 import type { ScenarioData } from '@fh/ghs-core/vendor/game/model/data/ScenarioData';
 import { HiddenScenarioFigureRuleTypes, type ScenarioFigureRule, type ScenarioRule } from '@fh/ghs-core/vendor/game/model/data/ScenarioRule';
 import { EntityValueFunction, type Entity } from '@fh/ghs-core/vendor/game/model/Entity';
+import { actionLines } from './actions';
 
 export function ruleSections(index: number): ScenarioData[] {
   const ruleModel = gameManager.game.scenarioRules[index];
@@ -122,6 +123,7 @@ export function ruleApplicable(rule: ScenarioRule): boolean {
 }
 
 const text = (key: string, args: (string | number)[] = []) => plainText(labelText(key, args.map(String)));
+const ghsString = (value: string) => (value.includes('%') ? plainText(value) : text(value));
 
 /** Plain-text lines describing a pending rule, like GHS' scenario-rule template. */
 export function describeRule(index: number): string[] {
@@ -129,7 +131,7 @@ export function describeRule(index: number): string[] {
   if (!ruleModel) return [];
   const rule = ruleModel.rule;
   const lines: string[] = [];
-  if (rule.noteTop) lines.push(text(rule.noteTop));
+  if (rule.noteTop) lines.push(ghsString(rule.noteTop));
   const spawns = gameManager.scenarioRulesManager.spawns(rule);
   if (spawns.length) {
     lines.push(
@@ -167,7 +169,12 @@ export function describeRule(index: number): string[] {
       .join(', ');
     lines.push(text('scenario.rules.figures.' + figureRule.type, [names, figureRule.value || '', figureRule.value || '']));
   });
-  if (rule.note) lines.push(text(rule.note));
+  rule.statEffects?.forEach((effect) => {
+    const name = text('data.monster.' + effect.identifier.name);
+    const actions = effect.statEffect?.actions?.length ? actionLines(effect.statEffect.actions as never).map((l) => l.text).join(', ') : '';
+    lines.push(effect.note ? ghsString(effect.note) : `${name}: ${actions}`);
+  });
+  if (rule.note) lines.push(ghsString(rule.note));
   if (rule.finish === 'won') lines.push('The scenario is won.');
   if (rule.finish === 'lost') lines.push('The scenario is lost.');
   if (rule.finish === 'round') lines.push('The round ends.');

@@ -42,7 +42,7 @@ export async function campaignRoutes(app: FastifyInstance, { db, hub }: { db: Db
     if (parsed.kind === 'settings') {
       throw new GhsImportError('This is a GHS settings file; export the game or a data dump instead');
     }
-    const state = campaignFromGhs(parsed.game);
+    const state = campaignFromGhs(parsed.game, parsed.kind === 'datadump' ? parsed.settings : undefined);
     const name = body.name || state.ghs.party?.name || body.filename || 'Imported campaign';
     const campaign = await db.transaction(async (tx) => {
       const [created] = await tx
@@ -73,8 +73,11 @@ export async function campaignRoutes(app: FastifyInstance, { db, hub }: { db: Db
       throw new GhsImportError('This is a GHS settings file; export the game or a data dump instead');
     }
     const room = await hub.room(id);
-    const imported = campaignFromGhs(parsed.game);
-    const state = { ghs: imported.ghs, ext: { ...room.state.ext, crossoverPerksToVerify: imported.ext.crossoverPerksToVerify } };
+    const imported = campaignFromGhs(parsed.game, parsed.kind === 'datadump' ? parsed.settings : undefined);
+    const state = {
+      ghs: imported.ghs,
+      ext: { ...room.state.ext, crossoverPerksToVerify: imported.ext.crossoverPerksToVerify, rules: imported.ext.rules ?? room.state.ext.rules }
+    };
     await db.insert(imports).values({ campaignId: id, filename: body.filename, kind: parsed.kind, raw: body.data as object, createdBy: req.user!.id });
     if (parsed.kind === 'datadump' && parsed.settings) {
       await db.update(campaigns).set({ ghsSettings: parsed.settings }).where(eq(campaigns.id, id));

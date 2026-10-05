@@ -61,7 +61,7 @@ export const useCampaign = create<CampaignStore>((set, get) => {
             return;
           }
           // Keep the in-browser GHS runtime in sync so components can use GHS helpers.
-          loadGhs(message.state.ghs);
+          loadGhs(message.state.ghs, message.state.ext.rules);
           set((s) => ({
             state: message.state,
             revision: message.revision,

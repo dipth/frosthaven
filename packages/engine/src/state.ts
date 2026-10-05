@@ -1,4 +1,5 @@
 import { Game, type GameModel } from '@fh/ghs-core';
+import type { CampaignRules } from './rules';
 
 export type SessionMode = 'physical' | 'online';
 
@@ -21,6 +22,8 @@ export interface ExtState {
    * dialog here): prosperity/morale thresholds, calendar weeks, town guard perks.
    */
   pendingConclusions?: PendingConclusion[];
+  /** Logic-affecting GHS settings for this campaign (see rules.ts). */
+  rules?: CampaignRules;
 }
 
 export interface PendingConclusion {

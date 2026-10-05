@@ -8,3 +8,8 @@ export * from './protocol';
 export * from './visibility';
 export * from './classes';
 export * from './crossover';
+export * from './ghs-ui/actions';
+export * from './ghs-ui/scenario-rules';
+export { ScenarioSummary } from './ghs-ui/scenario-summary';
+export { figureRef, entityRef, type FigureRef, type EntityRef } from './commands/play';
+export * from './rules';
