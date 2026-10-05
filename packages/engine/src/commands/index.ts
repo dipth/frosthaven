@@ -7,6 +7,7 @@ import { buildingCommands } from './buildings';
 import { characterCommands } from './character';
 import { eventCommands } from './events';
 import { partyCommands } from './party';
+import { playCommands } from './play';
 import { scenarioCommands } from './scenario';
 
 /** Players may act for their own characters; admins and unowned characters are open to everyone. */
@@ -72,42 +73,7 @@ const characterSetOwner = defineCommand({
   }
 });
 
-const characterInitiative = defineCommand({
-  type: 'character.initiative',
-  payload: characterRef.extend({ initiative: z.number().int().min(0).max(99) }),
-  authorize(state, payload, ctx) {
-    assertCanControlCharacter(state, characterKey(payload), ctx);
-  },
-  run(rt, payload) {
-    const character = findCharacter(rt, payload);
-    rt.gm.stateManager.before('setInitiative', 'data.character.' + character.edition + '.' + character.name, payload.initiative);
-    character.initiative = payload.initiative;
-    character.longRest = payload.initiative === 99;
-    rt.gm.stateManager.after();
-  }
-});
-
-const roundNext = defineCommand({
-  type: 'round.next',
-  payload: z.object({ force: z.boolean().default(false) }),
-  run(rt, { force }) {
-    if (rt.game.state === GameState.draw && !force && !rt.gm.roundManager.drawAvailable()) {
-      throw new CommandError('Not all characters have chosen an initiative');
-    }
-    rt.gm.stateManager.before(rt.game.state === GameState.next ? 'nextRound' : 'draw');
-    if (rt.game.state === GameState.next) {
-      let lastActive = rt.game.figures.find((figure) => rt.gm.gameplayFigure(figure) && !figure.off);
-      while (lastActive) {
-        rt.gm.roundManager.toggleFigure(lastActive, true);
-        lastActive = rt.game.figures.find((figure) => rt.gm.gameplayFigure(figure) && !figure.off);
-      }
-    }
-    rt.gm.roundManager.nextGameState(force);
-    rt.gm.stateManager.after();
-  }
-});
-
-const allCommands: CommandDef[] = [partyRename, characterAdd, characterSetOwner, characterInitiative, roundNext, ...scenarioCommands, ...partyCommands, ...characterCommands, ...eventCommands, ...buildingCommands];
+const allCommands: CommandDef[] = [partyRename, characterAdd, characterSetOwner, ...playCommands, ...scenarioCommands, ...partyCommands, ...characterCommands, ...eventCommands, ...buildingCommands];
 
 export const commands: Record<string, CommandDef> = Object.fromEntries(allCommands.map((c) => [c.type, c]));
 

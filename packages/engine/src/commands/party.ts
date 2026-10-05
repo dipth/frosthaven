@@ -11,6 +11,7 @@ import { LootType } from '@fh/ghs-core/vendor/game/model/data/Loot';
 import type { ScenarioData } from '@fh/ghs-core/vendor/game/model/data/ScenarioData';
 import { GameScenarioModel, Scenario } from '@fh/ghs-core/vendor/game/model/Scenario';
 import { z } from 'zod';
+import { ScenarioSummary } from '../ghs-ui/scenario-summary';
 import { CommandError, defineCommand, type CommandDef, type Runtime } from '../runtime';
 
 const lootTypes = z.enum(Object.values(LootType) as [LootType, ...LootType[]]);
@@ -594,24 +595,17 @@ const commands: CommandDef[] = [
       }
       const scenario = new Scenario(conclusion);
       rt.gm.stateManager.before('finishConclusion', ...rt.gm.scenarioManager.scenarioUndoArgs(scenario));
-      const rewards = conclusion.rewards;
+      // Same path as GHS' summary dialog for a conclusion.
+      const summary = ScenarioSummary.open({ scenario, success: true, conclusion, conclusionOnly: true });
+      const rewards = summary.rewards;
       if (payload.chooseLocation && rewards?.chooseLocation?.includes(payload.chooseLocation)) {
-        p.manualScenarios.push(new GameScenarioModel(payload.chooseLocation, scenario.edition, scenario.group));
+        summary.chooseLocation = payload.chooseLocation;
       }
       if (payload.chooseUnlockCharacter && rewards?.chooseUnlockCharacter?.includes(payload.chooseUnlockCharacter)) {
-        const key = scenario.edition + ':' + payload.chooseUnlockCharacter;
-        if (!rt.game.unlockedCharacters.includes(key)) {
-          rt.game.unlockedCharacters.push(key);
-        }
+        summary.chooseUnlockCharacter = payload.chooseUnlockCharacter;
       }
-      rewards?.calendarSectionManual?.forEach((manual, i) => {
-        const offset = payload.calendarSectionManual?.[i] ?? -1;
-        if (offset >= 0) {
-          const week = p.weeks + offset;
-          p.weekSections[week] = [...(p.weekSections[week] || []), manual.section];
-        }
-      });
-      rt.gm.scenarioManager.finishScenario(scenario, true, conclusion, false, false, true, p.campaignMode, true);
+      payload.calendarSectionManual?.forEach((value, i) => (summary.calendarSectionManual[i] = value));
+      summary.finish();
       if (pending?.week !== undefined && !scenario.repeatable) {
         p.weekSections[pending.week] = [...(p.weekSections[pending.week] || []), scenario.index];
       }
