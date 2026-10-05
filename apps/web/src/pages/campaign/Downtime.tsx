@@ -71,9 +71,9 @@ function costText(item: ItemData): string {
 function Shop({ character, canEdit, run }: { character: Character; canEdit: boolean; run: Run }) {
   const [filter, setFilter] = useState('');
   const im = gameManager.itemManager;
-  const supply = gameManager.game.party.unlockedItems
-    .map((id) => im.getItem(id.name, id.edition, true))
-    .filter((item): item is ItemData => !!item && item.requiredBuilding !== 'alchemist' && im.countAvailable(item) > 0)
+  const supply = im
+    .getItems(gameManager.currentEdition(), false)
+    .filter((item) => item.requiredBuilding !== 'alchemist' && im.countAvailable(item) > 0)
     .filter((item) => !filter || `${item.id} ${item.name}`.toLowerCase().includes(filter.toLowerCase()))
     .sort((a, b) => +a.id - +b.id);
   const owned = character.progress.items.map((id) => im.getItem(id.name, id.edition, true)).filter((item): item is ItemData => !!item);

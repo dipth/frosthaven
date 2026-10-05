@@ -33,6 +33,19 @@ export interface ExtState {
   outpostAttack?: OutpostAttackState;
   /** A retirement being reviewed before it's applied (GHS retirement dialog). */
   retirement?: RetirementDraft;
+  /** The outpost phase the group is going through, step by step. */
+  outpostPhase?: OutpostPhase;
+}
+
+export const OUTPOST_PHASE_STEPS = ['passage-of-time', 'outpost-event', 'building-operations', 'downtime', 'construction'] as const;
+export type OutpostPhaseStep = (typeof OUTPOST_PHASE_STEPS)[number];
+
+export interface OutpostPhase {
+  step: OutpostPhaseStep;
+  /** Calendar week when the phase started (passage of time advances it). */
+  startWeek: number;
+  /** Outpost event drawn this phase, if any. */
+  event?: { type: string; cardId: string };
 }
 
 export interface ScenarioRef {

@@ -236,6 +236,7 @@ const commands: CommandDef[] = [
         throw new CommandError(`The ${type} deck is empty`);
       }
       rt.ext.eventDraft = newDraft(rt, type, id);
+      if (rt.ext.outpostPhase && type.endsWith('outpost')) rt.ext.outpostPhase.event = { type, cardId: id };
       rt.log(`Drew ${type} event ${id}`);
     }
   }),

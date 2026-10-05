@@ -2,6 +2,7 @@ import { buildingStep, carpenterDiscount } from '@fh/engine';
 import { gameManager } from '@fh/ghs-core';
 import { useState } from 'react';
 import { PaymentDialog } from '../../components/PaymentDialog';
+import { OutpostPhasePanel } from './OutpostPhase';
 import { AddInput, Chip, Panel } from '../../components/ui';
 import { useCampaign } from '../../lib/campaign-store';
 import { buildingName } from '../../lib/labels';
@@ -32,6 +33,9 @@ export function OutpostTab() {
 
   return (
     <div className="grid gap-4 lg:grid-cols-2">
+      <div className="lg:col-span-2">
+        <OutpostPhasePanel />
+      </div>
       <Panel title={`Buildings (${built.length})`}>
         <table className="w-full text-sm">
           <tbody>
@@ -85,7 +89,7 @@ export function OutpostTab() {
         {paying && <BuildingPayment name={paying} onClose={() => setPaying(undefined)} />}
       </Panel>
 
-      <Panel title={`Item supply (${items.length})`}>
+      <Panel title={`Unlocked items (${items.length})`}>
         <ul className="grid max-h-[28rem] gap-1 overflow-y-auto text-sm">
           {items.map(({ identifier, item }) => {
             const total = item.count;
@@ -116,6 +120,7 @@ export function OutpostTab() {
             );
           })}
         </ul>
+        <p className="mt-2 text-xs text-frost-400">Items added to the supply by scenarios, events and blueprints. Building and prosperity items are in the supply automatically.</p>
         <div className="mt-3">
           <AddInput placeholder="Unlock item #" buttonLabel="Unlock" onAdd={(id) => run('party.addUnlockedItem', { id })} />
         </div>

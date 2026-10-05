@@ -21,8 +21,8 @@ function setup(): CampaignState {
 
 it('buys and sells items from the supply', () => {
   let state = setup();
-  expect(() => run(state, 'item.buy', { ...bb, id: 120 })).toThrow(/item supply/);
-  state = run(state, 'party.addUnlockedItem', { id: 120 });
+  // Prosperity 1 items are in the supply from the start; later ones aren't.
+  expect(() => run(state, 'item.buy', { ...bb, id: 130 })).toThrow(/item supply/);
   state = run(state, 'item.buy', { ...bb, id: 120 });
   expect(items(state)).toContain('120');
   const gold = progress(state).gold;

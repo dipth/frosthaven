@@ -5,6 +5,7 @@
  */
 import { Character } from '@fh/ghs-core';
 import { CountIdentifier } from '@fh/ghs-core/vendor/game/model/data/Identifier';
+import type { ItemData } from '@fh/ghs-core/vendor/game/model/data/ItemData';
 import { herbResourceLootTypes, LootType } from '@fh/ghs-core/vendor/game/model/data/Loot';
 import { z } from 'zod';
 import { brewingHerbs, brewResult } from '../ghs-ui/brew';
@@ -31,8 +32,9 @@ function owned(c: Character, data: { id: number | string; edition: string }) {
   return c.progress.items.some((i) => i.name === '' + data.id && i.edition === data.edition);
 }
 
-function unlocked(rt: Runtime, data: { id: number | string; edition: string }) {
-  return !rt.game.party.campaignMode || rt.game.party.unlockedItems.some((i) => i.name === '' + data.id && i.edition === data.edition);
+/** In the item supply: unlocked, or available through prosperity or a building (GHS isItemAvailable). */
+function unlocked(rt: Runtime, data: ItemData) {
+  return rt.gm.itemManager.isItemAvailable(data, rt.gm.currentEdition());
 }
 
 const herb = z.enum(herbResourceLootTypes as [LootType, ...LootType[]]);
