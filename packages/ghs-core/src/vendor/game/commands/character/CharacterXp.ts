@@ -1,0 +1,43 @@
+// Vendored from Gloomhaven Secretariat @ 5a49c8e4a6db (AGPL-3.0). Do not edit; re-run pnpm --filter @fh/ghs-core vendor.
+import { gameManager } from '../../businesslogic/GameManager';
+import { BASE_TYPE, CommandImpl } from '../Command';
+import { Character } from '../../model/Character';
+
+export class CharacterXpCommand extends CommandImpl {
+  id: string = 'character.xp';
+  requiredParameters: number = 2;
+
+  constructor(...parameters: BASE_TYPE[]) {
+    super(...parameters);
+  }
+
+  validParameters(number: number, xp: number): boolean {
+    return (
+      (gameManager.game.figures.find((figure) => figure instanceof Character && figure.number === number) !== undefined && xp !== 0) ||
+      false
+    );
+  }
+
+  executeWithParameters(number: number, xp: number) {
+    const character = gameManager.game.figures.find((figure) => figure instanceof Character && figure.number === number) as Character;
+    if (character) {
+      character.experience += xp;
+      if (character.experience < 0) {
+        character.experience = 0;
+      }
+    } else {
+      this.executionError('character not found or invalid');
+    }
+  }
+
+  override before(): BASE_TYPE[] {
+    const character = gameManager.game.figures.find(
+      (figure) => figure instanceof Character && figure.number === this.parameters[0]
+    ) as Character;
+    if (character) {
+      return ['command.' + this.id, gameManager.characterManager.characterName(character, true, true), this.parameters[1]];
+    }
+
+    return ['command.invalid.' + this.id, ...this.parameters];
+  }
+}

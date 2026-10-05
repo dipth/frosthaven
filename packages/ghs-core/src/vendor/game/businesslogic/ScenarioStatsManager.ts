@@ -1,0 +1,132 @@
+// Vendored from Gloomhaven Secretariat @ 5a49c8e4a6db (AGPL-3.0). Do not edit; re-run pnpm --filter @fh/ghs-core vendor.
+import { gameManager } from './GameManager';
+import { Character } from '../model/Character';
+import { MonsterType } from '../model/data/MonsterType';
+import { Entity } from '../model/Entity';
+import { Figure } from '../model/Figure';
+import { Game } from '../model/Game';
+import { Monster } from '../model/Monster';
+import { MonsterEntity } from '../model/MonsterEntity';
+import { GameScenarioModel, Scenario } from '../model/Scenario';
+import { Summon } from '../model/Summon';
+
+export class ScenarioStatsManager {
+  game: Game;
+
+  constructor(game: Game) {
+    this.game = game;
+  }
+
+  applyDamage(entity: Entity, figure: Figure, value: number, wasAlive: boolean = true) {
+    const activeFigure: Figure | undefined = this.game.figures.find((figure) => figure.active);
+
+    if (figure instanceof Character) {
+      if (entity instanceof Character) {
+        if (activeFigure && activeFigure instanceof Monster) {
+          entity.scenarioStats.monsterDamage += value;
+        } else {
+          entity.scenarioStats.otherDamage += value;
+        }
+        if (wasAlive && entity.health <= 0) {
+          entity.scenarioStats.exhausts += 1;
+        }
+        entity.scenarioStats.maxDamage = Math.max(entity.scenarioStats.maxDamage, value);
+      } else if (entity instanceof Summon) {
+        if (activeFigure && activeFigure instanceof Monster) {
+          figure.scenarioStats.summons.monsterDamage += value;
+        } else {
+          figure.scenarioStats.summons.otherDamage += value;
+        }
+        if (wasAlive && entity.health <= 0) {
+          figure.scenarioStats.summons.exhausts += 1;
+        }
+        figure.scenarioStats.summons.maxDamage = Math.max(figure.scenarioStats.summons.maxDamage, value);
+      }
+    } else if (activeFigure instanceof Character) {
+      if (activeFigure.summons.find((summon) => summon.active)) {
+        activeFigure.scenarioStats.summons.dealtDamage += value;
+        activeFigure.scenarioStats.summons.maxDealtDamage = Math.max(activeFigure.scenarioStats.summons.maxDealtDamage, value);
+      } else {
+        activeFigure.scenarioStats.dealtDamage += value;
+        activeFigure.scenarioStats.maxDealtDamage = Math.max(activeFigure.scenarioStats.maxDealtDamage, value);
+      }
+    }
+  }
+
+  applyHeal(entity: Entity, figure: Figure, value: number) {
+    const activeFigure: Figure | undefined = this.game.figures.find((figure) => figure.active);
+    if (figure instanceof Character && activeFigure instanceof Character) {
+      if (entity instanceof Character) {
+        entity.scenarioStats.healedDamage += value;
+      } else if (entity instanceof Summon) {
+        figure.scenarioStats.summons.healedDamage += value;
+      }
+
+      if (activeFigure.summons.find((summon) => summon.active)) {
+        activeFigure.scenarioStats.summons.heals += value;
+      } else {
+        activeFigure.scenarioStats.heals += value;
+      }
+    }
+  }
+
+  killMonsterEntity(entity: MonsterEntity) {
+    if (entity.tags.includes('ignore-kill')) {
+      return;
+    }
+    const activeFigure: Figure | undefined = this.game.figures.find((figure) => figure.active);
+    if (activeFigure instanceof Character) {
+      if (activeFigure.summons.find((summon) => summon.active)) {
+        if (entity instanceof MonsterEntity && entity.dead) {
+          switch (entity.type) {
+            case MonsterType.normal:
+              activeFigure.scenarioStats.summons.normalKills += 1;
+              break;
+            case MonsterType.elite:
+              activeFigure.scenarioStats.summons.eliteKills += 1;
+              break;
+            case MonsterType.boss:
+              activeFigure.scenarioStats.summons.bossKills += 1;
+              break;
+          }
+        }
+      } else {
+        if (entity instanceof MonsterEntity && entity.dead) {
+          switch (entity.type) {
+            case MonsterType.normal:
+              activeFigure.scenarioStats.normalKills += 1;
+              break;
+            case MonsterType.elite:
+              activeFigure.scenarioStats.eliteKills += 1;
+              break;
+            case MonsterType.boss:
+              activeFigure.scenarioStats.bossKills += 1;
+              break;
+          }
+        }
+      }
+    }
+  }
+
+  applyScenarioStats(character: Character, scenario: Scenario, success: boolean) {
+    character.scenarioStats.scenario = new GameScenarioModel(scenario.index, scenario.edition, scenario.group);
+    character.scenarioStats.success = success;
+    character.scenarioStats.level = character.level;
+    character.scenarioStats.difficulty = this.game.level;
+
+    character.scenarioStats.gold = character.loot;
+    character.scenarioStats.xp = character.experience;
+
+    character.scenarioStats.treasures = character.treasures.length;
+
+    character.scenarioStats.loot = {};
+    if (character.lootCards) {
+      character.lootCards.forEach((index) => {
+        const loot = this.game.lootDeck.cards[index];
+        if (loot) {
+          character.scenarioStats.loot[loot.type] = (character.scenarioStats.loot[loot.type] || 0) + gameManager.lootManager.getValue(loot);
+        }
+      });
+    }
+  }
+}

@@ -1,0 +1,332 @@
+// Vendored from Gloomhaven Secretariat @ 5a49c8e4a6db (AGPL-3.0). Do not edit; re-run pnpm --filter @fh/ghs-core vendor.
+import { ConditionName } from './data/Condition';
+
+export class Settings {
+  [index: string]: any;
+
+  abilities: boolean = true;
+  abilityNumbers: boolean = true;
+  abilityReveal: boolean = true;
+  activeApplyConditions: boolean = true;
+  activeApplyConditionsAuto: ConditionName[] = [];
+  activeApplyConditionsExcludes: ConditionName[] = [ConditionName.shield];
+  activeStandees: boolean = true;
+  activeSummons: boolean = true;
+  addAllMonsters: boolean = false;
+  allyAttackModifierDeck: boolean = true;
+  alwaysAllyAttackModifierDeck: boolean = false;
+  alwaysFhAdvantage: boolean = false;
+  alwaysFhEnhancements: boolean = false;
+  alwaysFhSolo: boolean = false;
+  alwaysGh2eImbuement: boolean = false;
+  alwaysHazardousTerrain: boolean = false;
+  alwaysLootApplyDialog = false;
+  alwaysLootDeck: boolean = false;
+  amAdvantage: boolean = true;
+  amAdvantageHouseRule: boolean = false;
+  animations: boolean = true;
+  animationSpeed: number = 1;
+  applyBuildingRewards: boolean = true;
+  applyConditions: boolean = true;
+  applyConditionsExcludes: ConditionName[] = [ConditionName.shield];
+  applyLongRest: boolean = true;
+  applyLoot: boolean = true;
+  applyLootRandomItem: boolean = true;
+  applyRetirement: boolean = true;
+  artwork: boolean = true;
+  autoBackup: number = -1;
+  autoBackupFinish: boolean = false;
+  autoBackupUrl:
+    | {
+        url: string;
+        method: string;
+        fileUpload: boolean;
+        username: string | undefined;
+        password: string | undefined;
+        authorization: string | undefined;
+      }
+    | undefined;
+  automaticAttackModifierFullscreen: boolean = true;
+  automaticEndRound: boolean = false;
+  automaticFirstFigure: boolean = true;
+  automaticGameClock: boolean = true;
+  automaticGameClockFocus: boolean = false;
+  automaticPassTime: boolean = true;
+  automaticStandees: boolean = true;
+  automaticStandeesDialog: boolean = false;
+  automaticTheme: boolean = true;
+  automaticUnlocking: boolean = true;
+  autoscroll: boolean = true;
+  barsize: number = 1;
+  backupHint: boolean = true;
+  battleGoals: boolean = false;
+  battleGoalsCharacter: boolean = false;
+  battleGoalsFh: boolean = false;
+  battleGoalsReminder: boolean = true;
+  bbAm: boolean = true;
+  bbChars: boolean = true;
+  bbStandeeLimit: boolean = true;
+  browserNavigation: boolean = false;
+  buildingEffectsVisible: boolean = false;
+  buildingInteractionsVisible: boolean = false;
+  calculate: boolean = true;
+  calculateAdvantageStats: boolean = true;
+  calculateShieldStats: boolean = true;
+  calculateStats: boolean = true;
+  calendarLocked: boolean | 'permissive' = false;
+  characterAttackModifierAnimate: boolean = true;
+  characterAttackModifierDeck: boolean = true;
+  characterAttackModifierDeckActiveBottom: boolean = false;
+  characterAttackModifierDeckPermanent: boolean = false;
+  characterAttackModifierDeckPermanentActive: boolean = false;
+  characterCompact: boolean = false;
+  characterFullView: boolean = false;
+  characterHandSize: boolean = false;
+  characterIdentities: boolean = true;
+  characterIdentityHint: boolean = true;
+  characterItems: boolean = false;
+  characterItemsApply: boolean = true;
+  characterItemsPermanent: boolean = false;
+  characterItemsPermanentActive: boolean = false;
+  characterItemsPermanentEquipped: boolean = true;
+  characterItemsPermanentSorted: boolean = true;
+  characterItemsPermanentZoom: number = 1;
+  characterItemsShareHouseRule: boolean = false;
+  playerNumber: boolean = false;
+  characterSheet: boolean = true;
+  characterSheetCompact: boolean = false;
+  characterSheetLocked: boolean = false;
+  characterShieldRetaliate: boolean = false;
+  characterSortIndex: boolean = false;
+  characterTraits: boolean = false;
+  columns: boolean = true;
+  columnsForce: boolean = false;
+  combineInteractiveAbilities: boolean = true;
+  customCss: string = '';
+  combineSummonAction: boolean = true;
+  damageHP: boolean = false;
+  damageHPToggle: boolean = true;
+  debugEditWorldMap: boolean = false;
+  debugEventCards: boolean = false;
+  debugRightClick: boolean = false;
+  disableAnimations: boolean = false;
+  disableArtwork: boolean = false;
+  disableColumns: boolean = false;
+  disableDragFigures: boolean = false;
+  disablePinchZoom: boolean = false;
+  disabledTurnConfirmation: boolean = false;
+  disableSortFigures: boolean = false;
+  disableStandees: boolean = false;
+  disableWakeLock: boolean = false;
+  dragFigures: boolean = true;
+  dragValues: boolean = true;
+  dragValuesHp: boolean = true;
+  dragValuesInitiative: boolean = true;
+  dragValuesLoot: boolean = true;
+  dragValuesXp: boolean = true;
+  drawRandomItem: boolean = true;
+  drawRandomScenario: boolean = true;
+  editionDataUrls: string[] = [];
+  editions: string[] = [];
+  eliteFirst: boolean = true;
+  entitiesMenu: boolean = true;
+  errata: boolean = false;
+  excludeEditionDataUrls: string[] = [];
+  expireConditions: boolean = true;
+  events: boolean = false;
+  eventsApply: boolean = true;
+  eventsDraw: boolean = true;
+  eventsDrawReminder: boolean = false;
+  feedbackErrors: boolean = true;
+  feedbackErrorsIgnore: string[] = [];
+  fhBrewGrid: boolean = false;
+  fhChallenges: boolean = false;
+  fhChallengesApply: boolean = true;
+  fhGarden: boolean = true;
+  fhGhItems: boolean = false;
+  fhGh2eItems: boolean = false;
+  fhPets: boolean = true;
+  fhSecondEdition: boolean = false;
+  fhShareResources: boolean = false;
+  fhStyle: boolean = false;
+  fhTrials: boolean = false;
+  fhTrialsApply: boolean = true;
+  fontsize: number = 1;
+  gameClock: boolean = false;
+  gameClockMerge: boolean = true;
+  gh2eFhItems: boolean = false;
+  gh2eForceFactionEnvelopes: boolean = false;
+  gh2eImbuement: boolean = true;
+  gh2eImbuementKeep: boolean = false;
+  globalFontsize: number = 1;
+  globalMapHighlighting: boolean = true;
+  fullscreen: boolean = false;
+  hideAbsent: boolean = false;
+  hideCharacterHP: boolean = false;
+  hideCharacterLoot: boolean = false;
+  hideCharacterXP: boolean = false;
+  hideStats: boolean = false;
+  hints: boolean = true;
+  initiativeRequired: boolean = true;
+  initiativeRoundConfirm: boolean = false;
+  interactiveAbilities: boolean = true;
+  keyboardShortcuts: boolean = true;
+  locale: string = 'en';
+  logServerMessages: boolean = false;
+  lootDeck: boolean = true;
+  maxUndo: number = 100;
+  portraitMode: boolean = true;
+  monsters: boolean = true;
+  monsterAttackModifierDeck: boolean = true;
+  monsterInitativeRange: boolean = false;
+  moveElements: boolean = true;
+  partySheet: boolean = true;
+  passiveSummons: boolean = true;
+  pinchZoom: boolean = true;
+  pressDoubleClick: boolean = true;
+  randomStandees: boolean = false;
+  removeUnusedMonster: boolean = false;
+  roundClock: boolean = true;
+  scenarioNumberInput: boolean = false;
+  scenarioRewards: boolean = true;
+  scenarioRooms: boolean = true;
+  scenarioRules: boolean = true;
+  scenarioRulesAutoapply: boolean = false;
+  scenarioStats: boolean = false;
+  scrollWheelValues: boolean = true;
+  serverAutoconnect: boolean = true;
+  serverCode: string | undefined;
+  serverExportCode: boolean = true;
+  serverPassword: string | undefined;
+  serverPing: number = 0;
+  serverPort: number | undefined;
+  serverSettings: boolean = false;
+  serverUrl: string | undefined;
+  serverWss: boolean = false;
+  showBossMonster: boolean = true;
+  showAllSections = false;
+  showExpandedAbilityCard: boolean = false;
+  showExpandedStatCard: boolean = false;
+  showFullAbilityCard: boolean = false;
+  showHiddenMonster: boolean = false;
+  showOnlyUnfinishedScenarios = false;
+  sortFigures: boolean = true;
+  spoilers: string[] = [];
+  standaloneInitiativeAutomatic: boolean = false;
+  standees: boolean = true;
+  standeeShieldRetaliate: boolean = false;
+  standeeStats: boolean = false;
+  statAnimations: boolean = false;
+  stats: boolean = true;
+  summons: boolean = true;
+  temporaryEnhancements: boolean = false;
+  theme: string = '';
+  tooltips: boolean = true;
+  treasures: boolean = true;
+  treasuresLoot: boolean = true;
+  treasuresLootItem: boolean = true;
+  treasuresLootScenario: boolean = true;
+  turnConfirmation: boolean = true;
+  unlockEnvelopeBuildings: boolean = true;
+  wakeLock: boolean = true;
+  wrapProsperity: boolean = false;
+  zoom: number = 100;
+}
+
+export const localSettings: string[] = [
+  'animations',
+  'animationSpeed',
+  'artwork',
+  'automaticAttackModifierFullscreen',
+  'autoBackup',
+  'autoBackupFinish',
+  'autoBackupUrl',
+  'automaticGameClock',
+  'automaticGameClockFocus',
+  'automaticTheme',
+  'autoscroll',
+  'barsize',
+  'backupHint',
+  'browserNavigation',
+  'buildingEffectsVisible',
+  'buildingInteractionsVisible',
+  'calendarLocked',
+  'characterAttackModifierAnimate',
+  'characterAttackModifierDeckActiveBottom',
+  'characterAttackModifierDeckPermanent',
+  'characterAttackModifierDeckPermanentActive',
+  'characterFullView',
+  'characterItemsPermanent',
+  'characterItemsPermanentActive',
+  'characterItemsPermanentEquipped',
+  'characterItemsPermanentSorted',
+  'characterItemsPermanentZoom',
+  'characterCompact',
+  'playerNumber',
+  'characterSheetCompact',
+  'characterSheetLocked',
+  'columns',
+  'columnsForce',
+  'customCss',
+  'damageHPToggle',
+  'debugEditWorldMap',
+  'debugEventCards',
+  'debugRightClick',
+  'disableAnimations',
+  'disableArtwork',
+  'disableColumns',
+  'disableDragFigures',
+  'disablePinchZoom',
+  'disableWakeLock',
+  'dragFigures',
+  'dragValues',
+  'dragValuesHp',
+  'dragValuesInitiative',
+  'dragValuesLoot',
+  'dragValuesXp',
+  'entitiesMenu',
+  'errata',
+  'eventsDrawReminder',
+  'fhBrewGrid',
+  'fhStyle',
+  'fontsize',
+  'gameClock',
+  'gameClockMerge',
+  'globalFontsize',
+  'globalMapHighlighting',
+  'feedbackErrors',
+  'feedbackErrorsIgnore',
+  'fullscreen',
+  'hideCharacterHP',
+  'hideCharacterLoot',
+  'hideCharacterXP',
+  'hints',
+  'initiativeRoundConfirm',
+  'keyboardShortcuts',
+  'logServerMessages',
+  'pinchZoom',
+  'portraitMode',
+  'pressDoubleClick',
+  'roundClock',
+  'scrollWheelValues',
+  'serverAutoconnect',
+  'serverCode',
+  'serverExportCode',
+  'serverPassword',
+  'serverPing',
+  'serverPort',
+  'serverSettings',
+  'serverUrl',
+  'serverWss',
+  'showAllSections',
+  'showBossMonster',
+  'showHiddenMonster',
+  'showOnlyUnfinishedScenarios',
+  'standaloneInitiativeAutomatic',
+  'statAnimations',
+  'theme',
+  'tooltips',
+  'wakeLock',
+  'wrapProsperity',
+  'zoom'
+];

@@ -1,0 +1,35 @@
+{
+  "name": "@fh/server",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch --clear-screen=false src/main.ts",
+    "start": "node --import tsx src/main.ts",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "tsx src/db/migrate.ts",
+    "db:studio": "drizzle-kit studio",
+    "create-admin": "tsx src/scripts/create-admin.ts"
+  },
+  "dependencies": {
+    "@fastify/cookie": "^11.1.2",
+    "@fastify/multipart": "^10.1.2",
+    "@fastify/rate-limit": "^11.2.0",
+    "@fastify/static": "^10.1.5",
+    "@fastify/websocket": "^11.3.3",
+    "@fh/engine": "workspace:*",
+    "@fh/ghs-core": "workspace:*",
+    "@node-rs/argon2": "^2.2.1",
+    "drizzle-orm": "~0.45.3",
+    "fastify": "^5.12.5",
+    "postgres": "^3.4.9",
+    "tsx": "^4.23.15",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@types/node": "^24.19.1",
+    "@types/ws": "^8.18.2",
+    "drizzle-kit": "~0.31.11"
+  }
+}

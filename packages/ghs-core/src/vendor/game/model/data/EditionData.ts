@@ -1,0 +1,108 @@
+// Vendored from Gloomhaven Secretariat @ 5a49c8e4a6db (AGPL-3.0). Do not edit; re-run pnpm --filter @fh/ghs-core vendor.
+import { BattleGoal } from './BattleGoal';
+import { BuildingData } from './BuildingData';
+import { ChallengeCard } from './Challenges';
+import { CharacterData } from './CharacterData';
+import { DeckData } from './DeckData';
+import { Editional } from './Editional';
+import { EventCard } from './EventCard';
+import { ItemData } from './ItemData';
+import { MonsterData } from './MonsterData';
+import { Perk } from './Perks';
+import { PersonalQuest } from './PersonalQuest';
+import { PetCard } from './PetCard';
+import { ScenarioData } from './ScenarioData';
+import { Favor, TrialCard } from './Trials';
+
+export const GH_PROSPERITY_STEPS = [3, 8, 14, 21, 29, 38, 49, 63];
+export const FH_PROSPERITY_STEPS = [5, 14, 26, 41, 59, 80, 104, 131];
+export const GH2E_PROSPERITY_STEPS = [4, 11, 21, 32, 44, 58, 73, 88];
+
+export type EditionType = 'standalone' | 'addon' | 'extension' | 'content';
+
+export class EditionData implements Editional {
+  // from Editional
+  edition: string;
+
+  characters: CharacterData[];
+  monsters: MonsterData[];
+  decks: DeckData[];
+  scenarios: ScenarioData[];
+  sections: ScenarioData[];
+  items: ItemData[];
+  conditions: string[] = [];
+  battleGoals: BattleGoal[] = [];
+  events: EventCard[] = [];
+  personalQuests: PersonalQuest[] = [];
+  challenges: ChallengeCard[] = [];
+  trials: TrialCard[] = [];
+  favors: Favor[] = [];
+  pets: PetCard[] = [];
+  worldMap: { width: number; height: number } | undefined;
+  extendWorldMap: string | undefined;
+  label: any = {};
+  labelSpoiler: any = {};
+  labelEvents: any = {};
+  url: string = '';
+  logoUrl: string = '';
+  type: EditionType = 'standalone';
+  extends: string[] = [];
+  newAmStyle: boolean = false;
+  newItemStyle: boolean = false;
+  campaign: CampaignData | undefined;
+  treasures: string[] = [];
+  treasureOffset: number = 0;
+  monsterAmTables: string[][] = [];
+
+  constructor(
+    edition: string,
+    characters: CharacterData[],
+    monsters: MonsterData[],
+    decks: DeckData[],
+    scenarios: ScenarioData[],
+    sections: ScenarioData[],
+    items: ItemData[],
+    conditions: string[] | undefined = undefined,
+    battleGoals: BattleGoal[] = [],
+    events: EventCard[] = [],
+    personalQuests: PersonalQuest[] = []
+  ) {
+    this.edition = edition;
+    this.characters = characters;
+    this.monsters = monsters;
+    this.decks = decks;
+    this.scenarios = scenarios;
+    this.sections = sections;
+    this.items = items;
+    if (conditions) {
+      this.conditions = conditions;
+    }
+    this.battleGoals = battleGoals;
+    this.events = events;
+    this.personalQuests = personalQuests;
+  }
+}
+
+export class CampaignData {
+  events: Partial<Record<string, string[]>> = {};
+
+  // FH
+  campaignStickers: string[] = [];
+  buildings: BuildingData[] = [];
+  highMorale: string[] = [];
+  lowMorale: string[] = [];
+  lootSpecial1Sections: string[] = [];
+  lootSpecial2Sections: string[] = [];
+  townGuardPerks: TownGuardPerk[] = [];
+  weeks: Partial<Record<number, string[]>> = {};
+
+  // GH2E
+  factions: string[] = [];
+  imbuementSections: Record<number, string> = {};
+  reputationSections: ReputationSection[] = [];
+  prosperitySections: Record<number, string> = {};
+}
+
+export type TownGuardPerk = { sections: string[]; perk: Perk };
+
+export type ReputationSection = { faction: string; value: number; section: string; requires?: string[] };

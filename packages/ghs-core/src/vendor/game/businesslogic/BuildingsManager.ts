@@ -1,0 +1,200 @@
+// Vendored from Gloomhaven Secretariat @ 5a49c8e4a6db (AGPL-3.0). Do not edit; re-run pnpm --filter @fh/ghs-core vendor.
+import { gameManager } from './GameManager';
+import { settingsManager } from './SettingsManager';
+import { BuildingModel, GardenModel } from '../model/Building';
+import { BuildingData, BuildingRewards } from '../model/data/BuildingData';
+import { ScenarioData } from '../model/data/ScenarioData';
+import { WorldMapCoordinates } from '../model/data/WorldMap';
+import { Game } from '../model/Game';
+
+export class BuildingsManager {
+  game: Game;
+
+  petsAvailable: boolean = false;
+  petsEnabled: boolean = false;
+  gardenAvailable: boolean = false;
+  gardenEnabled: boolean = false;
+  distillAvailable: boolean = false;
+
+  constructor(game: Game) {
+    this.game = game;
+  }
+
+  update() {
+    this.petsAvailable =
+      gameManager.fhRules() && gameManager.game.party.buildings.find((value) => value.name === 'stables' && value.level) !== undefined;
+    this.petsEnabled = this.petsAvailable && settingsManager.settings.fhPets;
+    this.gardenAvailable =
+      gameManager.fhRules() && gameManager.game.party.buildings.find((value) => value.name === 'garden' && value.level) !== undefined;
+    this.gardenEnabled = this.gardenAvailable && settingsManager.settings.fhGarden;
+    this.distillAvailable =
+      (settingsManager.settings.characterItems || settingsManager.settings.characterSheet) &&
+      gameManager.fhRules() &&
+      gameManager.game.party.buildings.find((value) => value.name === 'alchemist' && value.level > 1 && value.state !== 'wrecked') !=
+        undefined;
+  }
+
+  applyRewards(rewards: BuildingRewards) {
+    if (rewards.defense) {
+      this.game.party.defense += rewards.defense;
+    }
+    if (rewards.loseMorale) {
+      gameManager.campaignManager.changeMorale(-rewards.loseMorale);
+    }
+    if (rewards.prosperity) {
+      gameManager.campaignManager.changeProsperity(rewards.prosperity);
+    }
+
+    if (rewards.soldiers) {
+      this.game.party.soldiers += rewards.soldiers;
+      const baracks = this.game.party.buildings.find((model) => model.name === 'barracks');
+      if (baracks) {
+        let limit = 0;
+        if (baracks.level === 1) {
+          limit = 4;
+        } else if (baracks.level === 2) {
+          limit = 6;
+        } else if (baracks.level === 3) {
+          limit = 8;
+        } else if (baracks.level === 4) {
+          limit = 10;
+        }
+        if (this.game.party.soldiers > limit) {
+          this.game.party.soldiers = limit;
+        }
+      }
+    }
+  }
+
+  rewardSection(section: ScenarioData): ScenarioData | undefined {
+    if (
+      gameManager.game.party.conclusions.find(
+        (model) => model.edition === section.edition && model.index === section.index && model.group === section.group
+      )
+    ) {
+      return section;
+    }
+
+    const conclusions = gameManager
+      .sectionData(section.edition)
+      .filter(
+        (sectionData) =>
+          sectionData.conclusion &&
+          !sectionData.parent &&
+          sectionData.parentSections &&
+          sectionData.parentSections.find((parentSections) => parentSections.length === 1 && parentSections.includes(section.index))
+      );
+
+    if (conclusions.length === 0) {
+      return undefined;
+    } else {
+      let result: ScenarioData | undefined;
+      conclusions.forEach((conclusion) => {
+        if (!result) {
+          result = this.rewardSection(conclusion);
+        }
+      });
+
+      return result;
+    }
+  }
+
+  initialBuilding(buildingData: BuildingData): boolean {
+    return (
+      buildingData.costs.prosperity === 0 &&
+      buildingData.costs.lumber === 0 &&
+      buildingData.costs.metal === 0 &&
+      buildingData.costs.hide === 0 &&
+      buildingData.costs.gold === 0
+    );
+  }
+
+  availableBuilding(buildingData: BuildingData): boolean {
+    return (
+      buildingData.prosperityUnlock &&
+      buildingData.costs.prosperity <= gameManager.campaignManager.prosperityLevel() &&
+      !gameManager.game.party.buildings.find((model) => buildingData.name === model.name && model.level) &&
+      (!buildingData.requires ||
+        gameManager.game.party.buildings.find((model) => model.name === buildingData.requires && model.level) !== undefined)
+    );
+  }
+
+  nextWeek() {
+    if (this.gardenEnabled) {
+      const gardenBuilding = this.game.party.buildings.find((value) => value.name === 'garden' && value.level);
+      this.game.party.garden = this.game.party.garden || new GardenModel();
+      if (gardenBuilding) {
+        if (gardenBuilding.level < 3) {
+          this.game.party.garden.flipped = !this.game.party.garden.flipped;
+        } else {
+          this.game.party.garden.flipped = false;
+        }
+
+        if (this.game.party.garden.automated && (gardenBuilding.level > 2 || this.game.party.garden.flipped)) {
+          this.game.party.garden.plots.forEach((herb) => {
+            this.game.party.loot[herb] = (this.game.party.loot[herb] || 0) + 1;
+          });
+        }
+      }
+    }
+  }
+
+  coordinatesFromModel(input: BuildingModel): WorldMapCoordinates | undefined {
+    const campaign = gameManager.campaignManager.campaignData();
+    if (!campaign) {
+      return undefined;
+    }
+    const buildingData = campaign.buildings.find((data) => data.name === input.name);
+    if (!buildingData || !buildingData.coordinates || !buildingData.coordinates.length) {
+      return undefined;
+    }
+    let level = 0;
+    while (!buildingData.coordinates[level] && level < buildingData.coordinates.length - 1) {
+      level++;
+    }
+
+    let editionData = gameManager.editionData.find((editionData) => editionData.edition === gameManager.currentEdition());
+    if (editionData && !editionData.worldMap && editionData.extendWorldMap) {
+      editionData = gameManager.editionData.find((other) => editionData && other.edition === editionData.extendWorldMap && other.worldMap);
+    }
+
+    return buildingData.coordinates[level] || undefined;
+  }
+
+  distanceBetween(a: BuildingModel, b: BuildingModel): number | undefined {
+    const coordsA = this.coordinatesFromModel(a);
+    const coordsB = this.coordinatesFromModel(b);
+    if (!coordsA || !coordsB) {
+      return undefined;
+    }
+    const centerAx = coordsA.x + coordsA.width / 2;
+    const centerAy = coordsA.y + coordsA.height / 2;
+    const centerBx = coordsB.x + coordsB.width / 2;
+    const centerBy = coordsB.y + coordsB.height / 2;
+
+    return Math.sqrt(Math.pow(centerBx - centerAx, 2) + Math.pow(centerBy - centerAy, 2));
+  }
+
+  distanceFrom(a: BuildingModel, coordsB: WorldMapCoordinates): number | undefined {
+    const coordsA = this.coordinatesFromModel(a);
+
+    if (!coordsA) {
+      return undefined;
+    }
+    const centerAx = coordsA.x + coordsA.width / 2;
+    const centerAy = coordsA.y + coordsA.height / 2;
+    const centerBx = coordsB.x + coordsB.width / 2;
+    const centerBy = coordsB.y + coordsB.height / 2;
+
+    return Math.sqrt(Math.pow(centerBx - centerAx, 2) + Math.pow(centerBy - centerAy, 2));
+  }
+
+  distance(coordsA: WorldMapCoordinates, coordsB: WorldMapCoordinates): number {
+    const centerAx = coordsA.x + coordsA.width / 2;
+    const centerAy = coordsA.y + coordsA.height / 2;
+    const centerBx = coordsB.x + coordsB.width / 2;
+    const centerBy = coordsB.y + coordsB.height / 2;
+
+    return Math.sqrt(Math.pow(centerBx - centerAx, 2) + Math.pow(centerBy - centerAy, 2));
+  }
+}

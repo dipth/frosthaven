@@ -1,0 +1,23 @@
+{
+  "name": "@fh/ghs-core",
+  "private": true,
+  "type": "module",
+  "license": "AGPL-3.0-only",
+  "exports": {
+    ".": "./src/index.ts",
+    "./node": "./src/node.ts",
+    "./vendor/*": "./src/vendor/*.ts"
+  },
+  "scripts": {
+    "vendor": "tsx scripts/vendor.ts",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "uuid": "^14.0.2"
+  },
+  "devDependencies": {
+    "@types/node": "^24.19.1",
+    "tsx": "^4.23.15"
+  }
+}

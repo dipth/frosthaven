@@ -1,0 +1,11 @@
+node_modules
+**/node_modules
+.cache
+.assets
+.env
+.git
+apps/web/dist
+packages/data/generated
+fixtures/private
+test-results
+playwright-report

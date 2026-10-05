@@ -1,0 +1,341 @@
+// Vendored from Gloomhaven Secretariat @ 5a49c8e4a6db (AGPL-3.0). Do not edit; re-run pnpm --filter @fh/ghs-core vendor.
+import { Action } from './data/Action';
+import { ConditionName, EntityCondition, GameEntityConditionModel } from './data/Condition';
+import { SummonData } from './data/SummonData';
+import { Entity, EntityValueFunction } from './Entity';
+import { v4 as uuidv4 } from 'uuid';
+
+export enum SummonState {
+  new = 'new',
+  true = 'true',
+  false = 'false'
+}
+
+export enum SummonColor {
+  blue = 'blue',
+  green = 'green',
+  yellow = 'yellow',
+  orange = 'orange',
+  white = 'white',
+  purple = 'purple',
+  pink = 'pink',
+  red = 'red',
+  custom = 'custom',
+  fh = 'fh'
+}
+
+export class Summon implements Entity {
+  uuid: string;
+  name: string;
+  title: string;
+  cardId: string;
+  number: number;
+  color: SummonColor;
+  attack: number | string = 0;
+  movement: number = 0;
+  range: number = 0;
+  flying: boolean = false;
+  dead: boolean = false;
+  state: SummonState = SummonState.new;
+  init: boolean = true;
+  action: Action | undefined;
+  additionalAction: Action | undefined;
+  thumbnail: string | undefined;
+  thumbnailUrl: string | undefined;
+  noThumbnail: boolean = false;
+  dormant: boolean = false;
+  revealed: boolean = false;
+  passive: boolean = false;
+  trap: boolean = false;
+  afterTurn: boolean = false;
+  afterTurnActive: boolean = false;
+
+  // from entity
+  active: boolean = false;
+  off: boolean = false;
+  level: number;
+  health: number = 2;
+  maxHealth: number = 2;
+  entityConditions: EntityCondition[] = [];
+  immunities: ConditionName[] = [];
+  markers: string[] = [];
+  tags: string[] = [];
+  shield: Action | undefined;
+  shieldPersistent: Action | undefined;
+  retaliate: Action[] = [];
+  retaliatePersistent: Action[] = [];
+  extraActions: Action[] = [];
+  extraActionsPersistent: Action[] = [];
+
+  constructor(
+    uuid: string,
+    name: string,
+    cardId: string,
+    level: number,
+    number: number,
+    color: SummonColor,
+    summonData: SummonData | undefined = undefined
+  ) {
+    this.uuid = uuid || uuidv4();
+    this.name = name;
+    this.title = '';
+    this.cardId = cardId;
+    this.level = level;
+    this.number = number;
+    this.color = color;
+    if (summonData) {
+      this.maxHealth = EntityValueFunction(summonData.health, level);
+      this.health = this.maxHealth;
+      this.attack = summonData.attack || 0;
+      this.movement = EntityValueFunction(summonData.movement, level);
+      this.range = EntityValueFunction(summonData.range, level);
+      this.flying = summonData.flying;
+      this.action = summonData.action ? JSON.parse(JSON.stringify(summonData.action)) : undefined;
+      this.additionalAction = summonData.additionalAction ? JSON.parse(JSON.stringify(summonData.additionalAction)) : undefined;
+      if (summonData.thumbnail) {
+        this.thumbnail = summonData.edition + '-' + summonData.name;
+      }
+      this.thumbnailUrl = summonData.thumbnailUrl;
+      this.noThumbnail = summonData.noThumbnail;
+      this.passive = summonData.passive;
+      this.trap = summonData.trap;
+      if (this.trap) {
+        this.passive = true;
+      }
+    }
+    this.health = this.maxHealth;
+    this.afterTurn = false;
+    this.afterTurnActive = false;
+  }
+
+  toModel(): GameSummonModel {
+    return new GameSummonModel(
+      this.uuid || uuidv4(),
+      this.name,
+      this.title,
+      this.cardId,
+      this.number,
+      this.color,
+      (this.attack && this.attack + '') || '0',
+      this.movement,
+      this.range,
+      this.flying,
+      this.dead,
+      this.state,
+      this.level,
+      this.health,
+      this.maxHealth,
+      this.entityConditions.map((condition) => condition.toModel()),
+      this.immunities,
+      this.markers,
+      this.tags || [],
+      this.action ? JSON.stringify(this.action) : undefined,
+      this.additionalAction ? JSON.stringify(this.additionalAction) : undefined,
+      this.active,
+      this.dormant,
+      this.passive,
+      this.trap,
+      this.afterTurn,
+      this.afterTurnActive,
+      this.thumbnail,
+      this.thumbnailUrl,
+      this.noThumbnail,
+      this.shield,
+      this.shieldPersistent,
+      this.retaliate,
+      this.retaliatePersistent,
+      this.extraActions,
+      this.extraActionsPersistent
+    );
+  }
+
+  fromModel(model: GameSummonModel) {
+    this.uuid = model.uuid || uuidv4();
+    this.name = model.name || '';
+    this.title = model.title || '';
+    this.cardId = model.cardId || '';
+    this.number = model.number;
+    this.color = model.color;
+    this.attack = model.attack && !isNaN(+model.attack) ? +model.attack : model.attack || 0;
+    this.movement = model.movement;
+    this.range = model.range;
+    this.flying = model.flying;
+    this.dead = model.dead;
+    this.state = model.state;
+    this.level = model.level;
+    this.health = model.health;
+    this.maxHealth = model.maxHealth;
+    this.entityConditions = [];
+    if (model.entityConditions) {
+      this.entityConditions = model.entityConditions.map((gecm) => {
+        const condition = new EntityCondition(gecm.name, gecm.value);
+        condition.fromModel(gecm);
+        return condition;
+      });
+    }
+    this.immunities = model.immunities || [];
+    if (model.action) {
+      this.action = JSON.parse(model.action);
+    }
+
+    if (model.additionalAction) {
+      this.additionalAction = JSON.parse(model.additionalAction);
+    }
+
+    this.active = model.active;
+    this.dormant = model.dormant;
+    this.passive = model.passive;
+    this.trap = model.trap;
+    this.afterTurn = model.afterTurn || false;
+    this.afterTurnActive = model.afterTurnActive || false;
+    this.thumbnail = model.thumbnail;
+    this.thumbnailUrl = model.thumbnailUrl;
+    this.noThumbnail = model.noThumbnail;
+
+    this.markers = model.markers || this.markers;
+    this.tags = model.tags || this.tags;
+    this.init = false;
+
+    this.shield = model.shield ? JSON.parse(model.shield) : undefined;
+    this.shieldPersistent = model.shieldPersistent ? JSON.parse(model.shieldPersistent) : undefined;
+    this.retaliate = (model.retaliate || []).map((value) => JSON.parse(value));
+    this.retaliatePersistent = (model.retaliatePersistent || []).map((value) => JSON.parse(value));
+    this.extraActions = (model.extraActions || []).map((value) => JSON.parse(value) as Action);
+    this.extraActionsPersistent = (model.extraActionsPersistent || []).map((value) => JSON.parse(value) as Action);
+
+    if (this.shield) {
+      this.extraActions.push(this.shield);
+      this.shield = undefined;
+    }
+
+    if (this.retaliate.length) {
+      this.extraActions.push(...this.retaliate);
+      this.retaliate = [];
+    }
+
+    if (this.shieldPersistent) {
+      this.extraActionsPersistent.push(this.shieldPersistent);
+      this.shieldPersistent = undefined;
+    }
+
+    if (this.retaliatePersistent.length) {
+      this.extraActionsPersistent.push(...this.retaliatePersistent);
+      this.retaliatePersistent = [];
+    }
+  }
+}
+
+export class GameSummonModel {
+  uuid: string;
+  name: string;
+  title: string;
+  cardId: string;
+  number: number;
+  color: SummonColor;
+  attack: string;
+  movement: number;
+  range: number;
+  flying: boolean;
+  dead: boolean;
+  state: SummonState;
+  level: number;
+  health: number;
+  maxHealth: number;
+  entityConditions: GameEntityConditionModel[];
+  immunities: ConditionName[];
+  markers: string[];
+  tags: string[];
+  action: string | undefined;
+  additionalAction: string | undefined;
+  active: boolean = false;
+  dormant: boolean;
+  passive: boolean;
+  trap: boolean;
+  afterTurn: boolean;
+  afterTurnActive: boolean;
+  thumbnail: string | undefined;
+  thumbnailUrl: string | undefined;
+  noThumbnail: boolean;
+  shield: string;
+  shieldPersistent: string;
+  retaliate: string[];
+  retaliatePersistent: string[];
+  extraActions: string[];
+  extraActionsPersistent: string[];
+
+  constructor(
+    uuid: string,
+    name: string,
+    title: string,
+    cardId: string,
+    number: number,
+    color: SummonColor,
+    attack: string,
+    movement: number,
+    range: number,
+    flying: boolean,
+    dead: boolean,
+    state: SummonState,
+    level: number,
+    health: number,
+    maxHealth: number,
+    entityConditions: GameEntityConditionModel[],
+    immunities: ConditionName[],
+    markers: string[],
+    tags: string[],
+    action: string | undefined,
+    additionalAction: string | undefined,
+    active: boolean,
+    dormant: boolean,
+    passive: boolean,
+    trap: boolean,
+    afterTurn: boolean,
+    afterTurnActive: boolean,
+    thumbnail: string | undefined,
+    thumbnailUrl: string | undefined,
+    noThumbnail: boolean,
+    shield: Action | undefined,
+    shieldPersistent: Action | undefined,
+    retaliate: Action[],
+    retaliatePersistent: Action[],
+    extraActions: Action[],
+    extraActionsPersistent: Action[]
+  ) {
+    this.uuid = uuid;
+    this.name = name;
+    this.title = title;
+    this.cardId = cardId;
+    this.number = number;
+    this.color = color;
+    this.attack = attack;
+    this.movement = movement;
+    this.range = range;
+    this.flying = flying;
+    this.dead = dead;
+    this.state = state;
+    this.level = level;
+    this.health = health;
+    this.maxHealth = maxHealth;
+    this.entityConditions = JSON.parse(JSON.stringify(entityConditions));
+    this.immunities = JSON.parse(JSON.stringify(immunities));
+    this.markers = JSON.parse(JSON.stringify(markers));
+    this.tags = JSON.parse(JSON.stringify(tags));
+    this.action = action;
+    this.additionalAction = additionalAction;
+    this.active = active;
+    this.dormant = dormant;
+    this.passive = passive;
+    this.trap = trap;
+    this.afterTurn = afterTurn;
+    this.afterTurnActive = afterTurnActive;
+    this.thumbnail = thumbnail;
+    this.thumbnailUrl = thumbnailUrl;
+    this.noThumbnail = noThumbnail;
+    this.shield = shield ? JSON.stringify(shield) : '';
+    this.shieldPersistent = shieldPersistent ? JSON.stringify(shieldPersistent) : '';
+    this.retaliate = retaliate.map((action) => JSON.stringify(action));
+    this.retaliatePersistent = retaliatePersistent.map((action) => JSON.stringify(action));
+    this.extraActions = extraActions.map((action) => JSON.stringify(action));
+    this.extraActionsPersistent = extraActionsPersistent.map((action) => JSON.stringify(action));
+  }
+}

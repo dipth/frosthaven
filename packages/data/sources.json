@@ -1,0 +1,38 @@
+{
+  "ghs": {
+    "repo": "https://github.com/Lurkars/gloomhavensecretariat.git",
+    "commit": "5a49c8e4a6db0af14bdcdabf76f4770ad3fdf49a",
+    "license": "AGPL-3.0 (code); game content (c) Cephalofair Games",
+    "editions": ["fh", "fh-crossover", "gh", "fc", "jotl"]
+  },
+  "fhtts": {
+    "repo": "https://github.com/gudyfr/fhtts",
+    "commit": "eb1ac61a54e810e1b7f1988000b4b4deb2357cbc",
+    "license": "CC BY-NC-SA 4.0",
+    "files": ["processedScenarios.human.json", "parser/tileInfos.json", "parser/tiles.json"]
+  },
+  "worldhaven": {
+    "repo": "https://github.com/any2cards/worldhaven",
+    "commit": "ad2738b72a030a136294dddcba7f0cc76e910903",
+    "license": "Assets used with permission of Cephalofair by the maintainer only; private use, never redistribute",
+    "dataFiles": [
+      "art.js",
+      "attack-modifiers.js",
+      "battle-goals.js",
+      "character-ability-cards.js",
+      "character-mats.js",
+      "character-perks.js",
+      "events.js",
+      "items.js",
+      "loot-deck.js",
+      "map-tiles.js",
+      "monster-ability-cards.js",
+      "monster-stat-cards.js",
+      "outpost-building-cards.js",
+      "personal-quests.js",
+      "pet-cards.js",
+      "tokens.js",
+      "world-map.js"
+    ]
+  }
+}

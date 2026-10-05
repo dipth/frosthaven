@@ -1,0 +1,18 @@
+{
+  "name": "@fh/data",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "sync": "tsx scripts/sync.ts",
+    "assets": "tsx scripts/sync-assets.ts",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run --passWithNoTests"
+  },
+  "devDependencies": {
+    "@types/node": "^24.19.1",
+    "tsx": "^4.23.15"
+  }
+}

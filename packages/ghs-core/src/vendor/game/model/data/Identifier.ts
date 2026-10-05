@@ -1,0 +1,42 @@
+// Vendored from Gloomhaven Secretariat @ 5a49c8e4a6db (AGPL-3.0). Do not edit; re-run pnpm --filter @fh/ghs-core vendor.
+export class Identifier {
+  name: string = '';
+  edition: string = '';
+
+  constructor(name: string | number, edition: string) {
+    this.name = '' + name;
+    this.edition = edition;
+  }
+}
+
+export class CountIdentifier extends Identifier {
+  count: number;
+
+  constructor(name: string | number, edition: string, count: number = -1) {
+    super(name, edition);
+    this.count = count;
+  }
+}
+
+export class AdditionalIdentifier extends Identifier {
+  type: 'all' | 'character' | 'characterWithSummon' | 'objective' | 'monster' | 'enemies' | 'allies' | undefined;
+  marker: string | undefined;
+  tags: string[] | undefined;
+
+  constructor(
+    name: string | number,
+    edition: string,
+    type: 'all' | 'character' | 'characterWithSummon' | 'objective' | 'monster' | 'enemies' | 'allies' | undefined = undefined,
+    marker: string | undefined = undefined,
+    tags: string[] | undefined = undefined
+  ) {
+    super(name, edition);
+    this.type = type;
+    this.marker = marker;
+    this.tags = tags;
+  }
+
+  equals(other: AdditionalIdentifier): boolean {
+    return this.edition === other.edition && this.marker === other.marker && this.name === other.name && this.type === other.type;
+  }
+}

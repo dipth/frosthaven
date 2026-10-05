@@ -1,0 +1,63 @@
+[tools]
+node = "24.21.0"
+"npm:pnpm" = "10.34.6"
+
+[env]
+_.file = ".env"
+
+[tasks.setup]
+description = "Install dependencies, start Postgres, sync data and migrate"
+run = [
+  "pnpm install",
+  "docker compose up -d --wait postgres",
+  "pnpm data:sync",
+  "pnpm --filter @fh/server db:migrate",
+]
+
+[tasks.dev]
+description = "Run server and web app in watch mode"
+run = "pnpm dev"
+
+[tasks."db:up"]
+description = "Start local Postgres"
+run = "docker compose up -d --wait postgres"
+
+[tasks."db:down"]
+description = "Stop local Postgres"
+run = "docker compose down"
+
+[tasks."db:migrate"]
+description = "Run database migrations"
+run = "pnpm --filter @fh/server db:migrate"
+
+[tasks."db:generate"]
+description = "Generate a migration from schema changes"
+run = "pnpm --filter @fh/server db:generate"
+
+[tasks."db:studio"]
+description = "Open Drizzle Studio"
+run = "pnpm --filter @fh/server db:studio"
+
+[tasks."data:sync"]
+description = "Fetch pinned game data sources and build generated data"
+run = "pnpm data:sync"
+
+[tasks."assets:sync"]
+description = "Fetch Worldhaven images into ASSETS_DIR"
+run = "pnpm assets:sync"
+
+[tasks."create-admin"]
+description = "Create the initial admin user"
+run = "pnpm --filter @fh/server create-admin"
+
+[tasks.test]
+description = "Run unit tests"
+run = "pnpm test"
+
+[tasks.typecheck]
+description = "Typecheck all packages"
+run = "pnpm typecheck"
+
+[tasks."dev:seed"]
+description = "Create the local dev admin user 'admin' (password from DEV_ADMIN_PASSWORD in .env)"
+run = "ADMIN_PASSWORD=$DEV_ADMIN_PASSWORD pnpm --filter @fh/server create-admin admin Admin"

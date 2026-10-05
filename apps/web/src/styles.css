@@ -1,0 +1,53 @@
+@import 'tailwindcss';
+
+@theme {
+  --color-ink-950: #070d18;
+  --color-ink-900: #0b1220;
+  --color-ink-850: #0f1829;
+  --color-ink-800: #131d31;
+  --color-ink-700: #1c2942;
+  --color-ink-600: #26344f;
+  --color-ink-500: #3a4a6a;
+  --color-frost-100: #e6edf7;
+  --color-frost-300: #b7c6dc;
+  --color-frost-400: #8fa3c0;
+  --color-ice-300: #a8dcff;
+  --color-ice-400: #7cc4ff;
+  --color-ice-500: #4aa8f0;
+  --color-ember-400: #ffb36b;
+  --color-blood-400: #ff8a8a;
+  --color-moss-400: #8fdc9a;
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+}
+
+:root {
+  color-scheme: dark;
+}
+
+body {
+  @apply bg-ink-900 text-frost-100 antialiased;
+  background-image: radial-gradient(ellipse at 50% -20%, #1b2a47 0%, transparent 60%);
+  background-attachment: fixed;
+  min-height: 100vh;
+}
+
+@layer components {
+  .panel {
+    @apply rounded-xl border border-ink-600 bg-ink-800/80 shadow-lg shadow-black/20;
+  }
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg border border-ink-600 bg-ink-700 px-3 py-1.5 text-sm font-medium text-frost-100 transition hover:border-ink-500 hover:bg-ink-600 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn-primary {
+    @apply border-transparent bg-ice-400 text-ink-950 hover:bg-ice-300;
+  }
+  .btn-danger {
+    @apply border-blood-400/40 text-blood-400 hover:bg-blood-400/10;
+  }
+  .input {
+    @apply w-full rounded-lg border border-ink-600 bg-ink-950/60 px-3 py-1.5 text-sm text-frost-100 placeholder:text-frost-400/60 focus:border-ice-400 focus:outline-none;
+  }
+  .label {
+    @apply mb-1 block text-xs font-medium uppercase tracking-wide text-frost-400;
+  }
+}
