@@ -1,5 +1,6 @@
 import { Game, type GameModel } from '@fh/ghs-core';
 import type { EventCardAttack, EventCardAttackTarget, EventCardCondition, EventCardEffect } from '@fh/ghs-core/vendor/game/model/data/EventCard';
+import type { NarrationCue } from './narration';
 import type { CampaignRules } from './rules';
 
 export type SessionMode = 'physical' | 'online';
@@ -35,6 +36,8 @@ export interface ExtState {
   retirement?: RetirementDraft;
   /** The outpost phase the group is going through, step by step. */
   outpostPhase?: OutpostPhase;
+  /** Recent Forteller narration cues not yet dismissed by the narrator. */
+  narration?: NarrationCue[];
 }
 
 export const OUTPOST_PHASE_STEPS = ['passage-of-time', 'outpost-event', 'building-operations', 'downtime', 'construction'] as const;

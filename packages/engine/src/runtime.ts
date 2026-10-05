@@ -1,6 +1,7 @@
 import { gameManager, type Game, type GameManager, type GameModel } from '@fh/ghs-core';
 import type { z } from 'zod';
 import { BuildingModel } from '@fh/ghs-core/vendor/game/model/Building';
+import { addCues, detectNarration } from './narration';
 import { applyRules, type CampaignRules } from './rules';
 import type { CampaignState, ExtState } from './state';
 
@@ -126,8 +127,13 @@ export function runCommand<S extends z.ZodType>(
   def.run({ gm: gameManager, game: gameManager.game, ext, log: (m) => messages.push(m) }, parsed.data, ctx);
   refreshDerived();
 
+  const next: CampaignState = { ghs: snapshotGhs(), ext };
+  addCues(
+    ext,
+    detectNarration(state, next, (_kind, index) => gameManager.scenarioData(gameManager.currentEdition()).find((s) => s.index === index && !s.group)?.name)
+  );
   return {
-    state: { ghs: snapshotGhs(), ext },
+    state: next,
     log: { ghs: gameManager.stateManager.drainActionLog(), messages }
   };
 }

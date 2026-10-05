@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { Link, Route, Switch, useRoute } from 'wouter';
 import { useCampaign } from '../lib/campaign-store';
 import { EventFlow } from '../components/EventFlow';
+import { NarrationBanner } from '../components/NarrationBanner';
 import { PendingSections } from '../components/PendingSections';
 import { CharactersTab } from './campaign/CharactersTab';
 import { DataTab } from './campaign/DataTab';
@@ -64,6 +65,7 @@ export function CampaignPage({ id }: { id: string }) {
           </button>
         </div>
       </div>
+      <NarrationBanner />
       <PendingSections />
       <EventFlow />
       <nav className="flex gap-1 overflow-x-auto border-b border-ink-600">

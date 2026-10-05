@@ -1,5 +1,6 @@
+import { RULE_DEFAULTS } from '@fh/engine';
 import { useEffect, useState } from 'react';
-import { api } from '../../lib/api';
+import { api, type Me } from '../../lib/api';
 import { useCampaign } from '../../lib/campaign-store';
 import { useMe } from '../../lib/me';
 
@@ -85,6 +86,72 @@ export function DataTab({ campaignId }: { campaignId: string }) {
         </div>
         {message && <p className="text-sm text-frost-300">{message}</p>}
       </section>
+      <CampaignSettings />
     </div>
+  );
+}
+
+const RULE_LABELS: Partial<Record<keyof typeof RULE_DEFAULTS, string>> = {
+  events: 'Track event decks',
+  eventsApply: 'Apply event outcomes automatically',
+  applyLoot: 'Apply loot cards to characters',
+  applyConditions: 'Apply conditions automatically',
+  automaticPassTime: 'Pass time after scenarios',
+  automaticUnlocking: 'Unlock characters and quests automatically',
+  applyBuildingRewards: 'Apply building rewards',
+  drawRandomItem: 'Draw random items in the app',
+  drawRandomScenario: 'Draw random scenarios in the app',
+  unlockEnvelopeBuildings: 'Unlock envelope buildings',
+  fhChallenges: 'Town hall challenges',
+  fhTrials: 'Hall of Revelry trials',
+  fhGarden: 'Garden',
+  fhPets: 'Pets',
+  fhShareResources: 'Share resources (house rule)',
+  temporaryEnhancements: 'Temporary enhancements (variant)'
+};
+
+function CampaignSettings() {
+  const { state, send } = useCampaign();
+  const me = useMe();
+  const [users, setUsers] = useState<Me[]>([]);
+  useEffect(() => {
+    api<Me[]>('/api/users').then(setUsers, () => {});
+  }, []);
+  const rules = { ...RULE_DEFAULTS, ...state!.ext.rules };
+  const admin = me.role === 'admin';
+  return (
+    <section className="panel grid content-start gap-3 p-4 md:col-span-2">
+      <h2 className="font-medium">Campaign settings</h2>
+      <label className="flex flex-wrap items-center gap-2 text-sm">
+        <span className="text-frost-300">Forteller narrator</span>
+        <select
+          className="input w-auto"
+          value={state!.ext.narratorUserId ?? ''}
+          onChange={(e) => send('narration.setNarrator', { userId: e.target.value || null }).catch(() => {})}
+        >
+          <option value="">Everyone</option>
+          {users.map((u) => (
+            <option key={u.id} value={u.id}>
+              {u.displayName}
+            </option>
+          ))}
+        </select>
+        <span className="text-xs text-frost-400">gets the “play this now” cues and plays them from their own Forteller account.</span>
+      </label>
+      <div className="grid gap-1 text-sm sm:grid-cols-2">
+        {(Object.keys(RULE_LABELS) as (keyof typeof RULE_DEFAULTS)[]).map((key) => (
+          <label key={key} className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              disabled={!admin}
+              checked={Boolean(rules[key])}
+              onChange={(e) => send('campaign.setRule', { key, value: e.target.checked }).catch(() => {})}
+            />
+            {RULE_LABELS[key]}
+          </label>
+        ))}
+      </div>
+      {!admin && <p className="text-xs text-frost-400">Only the admin can change the rules.</p>}
+    </section>
   );
 }
