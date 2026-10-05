@@ -162,7 +162,8 @@ async function syncGhs() {
   sparseCheckout(dir, repo, commit, [
     ...editions.map((e) => `/data/${e}/`),
     '/src/app/game/',
-    '/src/app/ui/helper/Static.ts',
+    // The UI is not used at runtime; it's the reference for how each action is performed.
+    '/src/app/ui/',
     '/src/assets/locales/en.json',
     '/LICENSE'
   ]);

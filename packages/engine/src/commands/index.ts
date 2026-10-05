@@ -3,6 +3,10 @@ import { z } from 'zod';
 import { CommandError, defineCommand, runCommand, type CommandContext, type CommandDef, type ExecuteResult } from '../runtime';
 import { characterKey, type CampaignState } from '../state';
 import { playableClasses } from '../classes';
+import { buildingCommands } from './buildings';
+import { characterCommands } from './character';
+import { eventCommands } from './events';
+import { partyCommands } from './party';
 import { scenarioCommands } from './scenario';
 
 /** Players may act for their own characters; admins and unowned characters are open to everyone. */
@@ -103,7 +107,7 @@ const roundNext = defineCommand({
   }
 });
 
-const allCommands: CommandDef[] = [partyRename, characterAdd, characterSetOwner, characterInitiative, roundNext, ...scenarioCommands];
+const allCommands: CommandDef[] = [partyRename, characterAdd, characterSetOwner, characterInitiative, roundNext, ...scenarioCommands, ...partyCommands, ...characterCommands, ...eventCommands, ...buildingCommands];
 
 export const commands: Record<string, CommandDef> = Object.fromEntries(allCommands.map((c) => [c.type, c]));
 

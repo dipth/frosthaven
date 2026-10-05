@@ -16,6 +16,24 @@ export interface ExtState {
    * guessed on import and should be checked against the physical sheet.
    */
   crossoverPerksToVerify?: string[];
+  /**
+   * Sections the group must read and resolve (GHS would open its conclusion
+   * dialog here): prosperity/morale thresholds, calendar weeks, town guard perks.
+   */
+  pendingConclusions?: PendingConclusion[];
+}
+
+export interface PendingConclusion {
+  /**
+   * 'conclusion': has GHS data and is resolved with conclusion.finish;
+   * 'read': a section to read from the book (no data), dismissed when done.
+   */
+  kind: 'conclusion' | 'read';
+  section: string;
+  edition: string;
+  reason: string;
+  /** Calendar week the section was triggered by, if any. */
+  week?: number;
 }
 
 export interface CampaignState {
