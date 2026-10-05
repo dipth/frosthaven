@@ -1,4 +1,7 @@
+import { buildingStep, carpenterDiscount } from '@fh/engine';
 import { gameManager } from '@fh/ghs-core';
+import { useState } from 'react';
+import { PaymentDialog } from '../../components/PaymentDialog';
 import { AddInput, Chip, Panel } from '../../components/ui';
 import { useCampaign } from '../../lib/campaign-store';
 import { buildingName } from '../../lib/labels';
@@ -13,6 +16,7 @@ export function OutpostTab() {
   const { state, send } = useCampaign();
   const party = state!.ghs.party;
   const run = (type: string, payload: unknown) => send(type, payload).catch(() => {});
+  const [paying, setPaying] = useState<string>();
   const buildingData = gameManager.campaignManager.campaignData().buildings ?? [];
   const built = [...party.buildings].sort((a, b) => {
     const ia = buildingData.find((d) => d.name === a.name)?.id ?? '';
@@ -53,6 +57,7 @@ export function OutpostTab() {
                     ) : null}
                   </td>
                   <td className="py-1.5 text-right whitespace-nowrap">
+                    <BuildAction name={b.name} onClick={() => setPaying(b.name)} />{' '}
                     <button className="btn h-7 px-2" title="Downgrade" onClick={() => run('building.downgrade', { name: b.name })}>
                       −
                     </button>{' '}
@@ -74,7 +79,10 @@ export function OutpostTab() {
             />
           </div>
         )}
-        <p className="mt-2 text-xs text-frost-400">Upgrades here record what's on the outpost map; paying costs happens in the outpost phase.</p>
+        <p className="mt-2 text-xs text-frost-400">
+          Build, upgrade, repair and rebuild pay the costs. − and + only record what's already on the outpost map.
+        </p>
+        {paying && <BuildingPayment name={paying} onClose={() => setPaying(undefined)} />}
       </Panel>
 
       <Panel title={`Item supply (${items.length})`}>
@@ -126,5 +134,39 @@ export function OutpostTab() {
         <AddInput placeholder="Treasure #" onAdd={(treasure) => run('party.addTreasure', { treasure })} />
       </Panel>
     </div>
+  );
+}
+
+function BuildAction({ name, onClick }: { name: string; onClick(): void }) {
+  const model = gameManager.game.party.buildings.find((b) => b.name === name);
+  const data = gameManager.campaignManager.campaignData().buildings?.find((d) => d.name === name);
+  const step = model && data ? buildingStep(model, data) : undefined;
+  if (!step || step.manual) return null;
+  const label = { build: 'Build', upgrade: 'Upgrade', repair: 'Repair', rebuild: 'Rebuild', soldier: '' }[step.action];
+  return (
+    <button className="btn h-7 px-2 text-xs" onClick={onClick}>
+      {label}…
+    </button>
+  );
+}
+
+function BuildingPayment({ name, onClose }: { name: string; onClose(): void }) {
+  const { send } = useCampaign();
+  const model = gameManager.game.party.buildings.find((b) => b.name === name);
+  const data = gameManager.campaignManager.campaignData().buildings?.find((d) => d.name === name);
+  const step = model && data ? buildingStep(model, data) : undefined;
+  if (!step || !model) return null;
+  const command = step.action === 'repair' ? 'building.repair' : step.action === 'rebuild' ? 'building.rebuild' : 'building.construct';
+  const verb = { build: 'Build', upgrade: `Upgrade to level ${model.level + 1}:`, repair: 'Repair', rebuild: 'Rebuild', soldier: '' }[step.action];
+  return (
+    <PaymentDialog
+      title={`${verb} ${buildingName(name)}`}
+      costs={step.costs}
+      discount={step.action !== 'repair' && carpenterDiscount()}
+      allowMorale={step.action === 'repair'}
+      onPay={(payment) => send(command, { name, payment })}
+      onMorale={() => send('building.repair', { name, morale: true })}
+      onClose={onClose}
+    />
   );
 }

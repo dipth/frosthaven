@@ -1,5 +1,7 @@
+import { SOLDIER_COSTS, soldierCapacity } from '@fh/engine';
 import { gameManager } from '@fh/ghs-core';
 import { useState } from 'react';
+import { PaymentDialog } from '../../components/PaymentDialog';
 import { AddInput, Chip, NotesField, Panel, StatRow, Stepper } from '../../components/ui';
 import { useCampaign } from '../../lib/campaign-store';
 import { lootName, season, stickerName } from '../../lib/labels';
@@ -38,6 +40,7 @@ export function PartyTab() {
         </StatRow>
         <StatRow label="Soldiers">
           <Stepper value={party.soldiers} max={20} onChange={(value) => run('party.setSoldiers', { value })} />
+          <RecruitSoldier />
         </StatRow>
         <StatRow label="Inspiration">
           <Stepper value={party.inspiration} onChange={(value) => run('party.setInspiration', { value })} />
@@ -243,3 +246,31 @@ function ScenariosPanel() {
   );
 }
 
+
+function RecruitSoldier() {
+  const { send } = useCampaign();
+  const [open, setOpen] = useState(false);
+  const capacity = soldierCapacity();
+  const party = gameManager.game.party;
+  return (
+    <>
+      <button
+        className="btn ml-2 h-7 px-2 text-xs"
+        disabled={party.soldiers >= capacity}
+        title={capacity ? `Barracks hold ${capacity} soldiers` : 'Needs working barracks'}
+        onClick={() => setOpen(true)}
+      >
+        Recruit…
+      </button>
+      {open && (
+        <PaymentDialog
+          title="Recruit a soldier"
+          costs={SOLDIER_COSTS}
+          discount={false}
+          onPay={(payment) => send('party.recruitSoldier', { payment })}
+          onClose={() => setOpen(false)}
+        />
+      )}
+    </>
+  );
+}
