@@ -1,5 +1,6 @@
 import { gameManager, type Game, type GameManager, type GameModel } from '@fh/ghs-core';
 import type { z } from 'zod';
+import { BuildingModel } from '@fh/ghs-core/vendor/game/model/Building';
 import { applyRules, type CampaignRules } from './rules';
 import type { CampaignState, ExtState } from './state';
 
@@ -55,6 +56,51 @@ export function loadGhs(model: GameModel, rules?: CampaignRules) {
   gameManager.stateManager.reset();
   gameManager.game.figures = [];
   gameManager.game.fromModel(structuredClone(model));
+  refreshDerived();
+}
+
+/**
+ * Derived manager state GHS recomputes on every UI change (GhsManager
+ * onUiChangeUpdate): first round flag, enhancer level, alchemist/garden
+ * availability, etc. Only the non-mutating part of that hook.
+ */
+export function refreshDerived() {
+  const game = gameManager.game;
+  gameManager.roundManager.firstRound = game.round === 0 && game.roundResets.length === 0 && game.roundResetsHidden.length === 0;
+  gameManager.buildingsManager.update();
+  gameManager.challengesManager.update();
+  gameManager.trialsManager.update();
+  gameManager.enhancementsManager.update();
+  gameManager.imbuementManager.update();
+  syncOutpostBuildings();
+}
+
+/**
+ * GHS src/app/ui/figures/party/buildings/buildings.ts updateBuildings(): the
+ * starting buildings are built (level 1, rewards applied) and buildings
+ * unlocked by prosperity are listed (level 0).
+ */
+function syncOutpostBuildings() {
+  const game = gameManager.game;
+  if (!game.party.campaignMode || !gameManager.fhRules()) return;
+  const campaign = gameManager.campaignManager.campaignData();
+  if (!campaign?.buildings) return;
+  for (const data of campaign.buildings) {
+    if (gameManager.buildingsManager.initialBuilding(data) && !game.party.buildings.some((m) => m.name === data.name)) {
+      game.party.buildings.push(new BuildingModel(data.name, 1));
+      if (data.rewards?.[0]) gameManager.buildingsManager.applyRewards(data.rewards[0]);
+    }
+  }
+  for (const data of campaign.buildings) {
+    if (
+      data.prosperityUnlock &&
+      data.costs.prosperity <= gameManager.campaignManager.prosperityLevel() &&
+      !game.party.buildings.some((m) => m.name === data.name) &&
+      (!data.requires || game.party.buildings.some((m) => m.name === data.requires && m.level))
+    ) {
+      game.party.buildings.push(new BuildingModel(data.name, 0));
+    }
+  }
 }
 
 /** Serializes the GHS singletons to a plain, detached GameModel. */
@@ -78,6 +124,7 @@ export function runCommand<S extends z.ZodType>(
   const ext = structuredClone(state.ext);
   const messages: string[] = [];
   def.run({ gm: gameManager, game: gameManager.game, ext, log: (m) => messages.push(m) }, parsed.data, ctx);
+  refreshDerived();
 
   return {
     state: { ghs: snapshotGhs(), ext },

@@ -26,6 +26,14 @@ function placeholderText(key: string, depth: number): string | undefined {
   const [path, value] = key.split(':') as [string, string | undefined];
   const signed = path.endsWith('.valueSign');
   const base = signed ? path.slice(0, -'.valueSign'.length) : path;
+  if (base === 'game' && signed && value !== undefined) {
+    const n = Number(value);
+    return `${Number.isNaN(n) || n < 0 ? '' : '+'}${value}`;
+  }
+  const itemNumber = /^game\.item(?:Fh)?\.(\d+)$/.exec(base);
+  if (itemNumber) {
+    return `(item ${itemNumber[1]})`;
+  }
   const modifier = /^game\.(attackModifier|card)\.(\w+)$/.exec(base);
   if (modifier && attackModifiers[modifier[2]!]) {
     return attackModifiers[modifier[2]!];
@@ -65,6 +73,7 @@ export function plainText(text: string, depth = 0): string {
     })
     .replace(/&#91;/g, '[')
     .replace(/&#93;/g, ']')
+    .replace(/<br\s*\/?>/gi, '\n')
     .replace(/<[^>]+>/g, '');
 }
 

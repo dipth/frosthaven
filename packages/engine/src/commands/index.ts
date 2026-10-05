@@ -5,7 +5,9 @@ import { characterKey, type CampaignState } from '../state';
 import { playableClasses } from '../classes';
 import { buildingCommands } from './buildings';
 import { characterCommands } from './character';
+import { eventFlowCommands } from './event-flow';
 import { eventCommands } from './events';
+import { outpostAttackCommands } from './outpost-attack';
 import { partyCommands } from './party';
 import { playCommands } from './play';
 import { scenarioCommands } from './scenario';
@@ -73,7 +75,7 @@ const characterSetOwner = defineCommand({
   }
 });
 
-const allCommands: CommandDef[] = [partyRename, characterAdd, characterSetOwner, ...playCommands, ...scenarioCommands, ...partyCommands, ...characterCommands, ...eventCommands, ...buildingCommands];
+const allCommands: CommandDef[] = [partyRename, characterAdd, characterSetOwner, ...playCommands, ...scenarioCommands, ...partyCommands, ...characterCommands, ...eventCommands, ...eventFlowCommands, ...outpostAttackCommands, ...buildingCommands];
 
 export const commands: Record<string, CommandDef> = Object.fromEntries(allCommands.map((c) => [c.type, c]));
 

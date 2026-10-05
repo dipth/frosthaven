@@ -13,3 +13,6 @@ export * from './ghs-ui/scenario-rules';
 export { ScenarioSummary } from './ghs-ui/scenario-summary';
 export { figureRef, entityRef, type FigureRef, type EntityRef } from './commands/play';
 export * from './rules';
+export * from './ghs-ui/event-text';
+export * from './ghs-ui/outpost-attack';
+export { draftCard, DISTRIBUTION_EFFECTS } from './commands/event-flow';

@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { Link, Route, Switch, useRoute } from 'wouter';
 import { useCampaign } from '../lib/campaign-store';
+import { EventFlow } from '../components/EventFlow';
 import { PendingSections } from '../components/PendingSections';
 import { CharactersTab } from './campaign/CharactersTab';
 import { DataTab } from './campaign/DataTab';
@@ -64,6 +65,7 @@ export function CampaignPage({ id }: { id: string }) {
         </div>
       </div>
       <PendingSections />
+      <EventFlow />
       <nav className="flex gap-1 overflow-x-auto border-b border-ink-600">
         {tabs.map((tab) => (
           <TabLink key={tab.path} path={tab.path} label={tab.label} />

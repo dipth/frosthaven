@@ -167,7 +167,7 @@ export function NotesField({ value, onSave, rows = 4, placeholder }: { value: st
   );
 }
 
-export function Modal({ title, onClose, children }: { title: ReactNode; onClose(): void; children: ReactNode }) {
+export function Modal({ title, onClose, children, wide }: { title: ReactNode; onClose(): void; children: ReactNode; wide?: boolean }) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
     window.addEventListener('keydown', onKey);
@@ -175,7 +175,7 @@ export function Modal({ title, onClose, children }: { title: ReactNode; onClose(
   }, [onClose]);
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 p-4" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
-      <div role="dialog" aria-modal className="panel max-h-[90vh] w-full max-w-lg overflow-y-auto p-5">
+      <div role="dialog" aria-modal className={`panel max-h-[90vh] w-full ${wide ? 'max-w-3xl' : 'max-w-lg'} overflow-y-auto p-5`}>
         <header className="mb-4 flex items-start gap-2">
           <h2 className="text-lg font-medium">{title}</h2>
           <button className="ml-auto text-frost-400 hover:text-frost-100" onClick={onClose} aria-label="Close">

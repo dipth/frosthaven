@@ -42,6 +42,18 @@ const commands: CommandDef[] = [
     }
   }),
   defineCommand({
+    type: 'events.rebuildAll',
+    payload: z.object({}),
+    run(rt) {
+      rt.gm.stateManager.before('events.deck.reset', 'all');
+      rt.game.party.eventDecks = {};
+      rt.gm.eventCardManager.buildPartyDeckMigration(edition(rt));
+      rt.gm.stateManager.after();
+      const decks = Object.entries(rt.game.party.eventDecks).map(([type, cards]) => `${type} ${cards?.length ?? 0}`);
+      rt.log(`Rebuilt the event decks from campaign progress (${decks.join(', ')})`);
+    }
+  }),
+  defineCommand({
     type: 'events.addCard',
     payload: card.extend({ position: z.enum(['shuffle', 'top', 'bottom']).default('shuffle') }),
     run(rt, { type, cardId, position }) {

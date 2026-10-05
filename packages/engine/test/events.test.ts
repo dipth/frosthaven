@@ -10,7 +10,10 @@ beforeAll(async () => {
 });
 
 it('builds, edits and reorders an event deck', () => {
-  let state = run(newCampaignState('x'), 'events.buildDeck', { type: 'summer-road' });
+  // Event decks are built automatically (GHS migration) when tracking events.
+  let state = run(newCampaignState('x'), 'events.reset', { type: 'summer-road' });
+  expect(state.ghs.party.eventDecks['winter-road']!.length).toBeGreaterThan(10);
+  state = run(state, 'events.buildDeck', { type: 'summer-road' });
   const deck = state.ghs.party.eventDecks['summer-road']!;
   expect(deck.length).toBeGreaterThan(10);
   expect(() => run(state, 'events.buildDeck', { type: 'summer-road' })).toThrow(/already has cards/);
@@ -27,12 +30,13 @@ it('builds, edits and reorders an event deck', () => {
 });
 
 it('records outpost buildings', () => {
-  let state = newCampaignState('x');
+  let state = run(newCampaignState('x'), 'party.rename', { name: 'y' });
   const initial = state.ghs.party.buildings.map((b) => `${b.name}:${b.level}`);
-  state = run(state, 'building.add', { name: 'barracks' });
+  // FH starts with the starting buildings in place (GHS buildings view).
+  expect(initial).toContain('barracks:1');
   state = run(state, 'building.upgrade', { name: 'barracks' });
   const barracks = state.ghs.party.buildings.find((b) => b.name === 'barracks')!;
-  expect(barracks.level).toBe(1);
+  expect(barracks.level).toBe(2);
   state = run(state, 'building.setState', { name: 'barracks', state: 'damaged' });
   expect(state.ghs.party.buildings.find((b) => b.name === 'barracks')!.state).toBe('damaged');
   expect(initial).toBeDefined();

@@ -29,6 +29,13 @@ export function DecksTab() {
             </li>
           ))}
         </ul>
+        <button
+          className="btn mt-3 w-full text-xs"
+          title="Empty all event decks and rebuild them from the starting cards plus everything unlocked so far"
+          onClick={() => confirm('Rebuild all event decks from campaign progress? Current deck contents are replaced.') && send('events.rebuildAll').catch(() => {})}
+        >
+          Rebuild all from campaign
+        </button>
       </Panel>
       <div className="grid gap-4">
         <Panel
@@ -40,6 +47,9 @@ export function DecksTab() {
                   Build starting deck
                 </button>
               )}
+              <button className="btn btn-primary" disabled={deck.length === 0 || !!state!.ext.eventDraft} onClick={() => run('eventDraw.start')}>
+                Draw
+              </button>
               <button className="btn" disabled={deck.length < 2} onClick={() => run('events.shuffle')}>
                 Shuffle
               </button>

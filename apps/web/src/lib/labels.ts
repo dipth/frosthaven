@@ -42,3 +42,19 @@ export function season(weeks: number): 'summer' | 'winter' {
 export function ghsText(value: string) {
   return value.includes('%') || value.includes(' ') ? plainText(value) : labelText(value);
 }
+
+const eventImageFolders: Record<string, [string, string]> = {
+  'summer-road': ['road', 'sre'],
+  'winter-road': ['road', 'wre'],
+  'summer-outpost': ['outpost', 'soe'],
+  'winter-outpost': ['outpost', 'woe'],
+  boat: ['boat', 'be']
+};
+
+/** Worldhaven image of a Frosthaven event card (synced into ASSETS_DIR; may be missing). */
+export function eventCardImage(type: string, cardId: string, side: 'f' | 'b' = 'f'): string | undefined {
+  const folder = eventImageFolders[type];
+  const number = /(\d+)$/.exec(cardId)?.[1];
+  if (!folder || !number) return undefined;
+  return `/assets/worldhaven/events/frosthaven/${folder[0]}/fh-${folder[1]}-${number.padStart(2, '0')}-${side}.png`;
+}

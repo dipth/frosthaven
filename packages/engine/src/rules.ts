@@ -40,8 +40,17 @@ export const RULE_DEFAULTS = {
   partySheet: true,
   fhShareResources: false,
   fhSecondEdition: false,
+  events: true,
   eventsDraw: true,
   eventsApply: true,
+  unlockEnvelopeBuildings: true,
+  fhChallenges: false,
+  fhChallengesApply: true,
+  fhTrials: false,
+  fhTrialsApply: true,
+  fhGarden: true,
+  fhPets: true,
+  temporaryEnhancements: false,
   expireConditions: true,
   applyLongRest: true,
   scenarioRooms: true,
@@ -61,6 +70,9 @@ export function rulesFromGhsSettings(settings: Record<string, unknown> | undefin
       }
     }
   }
+  // Tracking event decks is a core feature of this app (physical sync), even
+  // when the group had it switched off in Secretariat.
+  rules['events'] = true;
   return rules as CampaignRules;
 }
 

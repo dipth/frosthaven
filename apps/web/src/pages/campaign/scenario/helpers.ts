@@ -41,13 +41,28 @@ const amNames: Record<string, string> = {
   bless: '2x Bless',
   curse: 'Miss Curse',
   empower: '+2 Empower',
-  enfeeble: '-2 Enfeeble'
+  enfeeble: '-2 Enfeeble',
+  success: 'Success',
+  wreck: 'Wreck'
 };
+
+function amValue(am: AttackModifier): string {
+  switch (am.valueType) {
+    case 'plus':
+      return `+${am.value}`;
+    case 'minus':
+      return `-${am.value}`;
+    case 'multiply':
+      return `${am.value}x`;
+    default:
+      return am.type;
+  }
+}
 
 /** Short text for an attack modifier card, e.g. "+1 poison (rolling)". */
 export function amText(am: AttackModifier | undefined): string {
   if (!am) return '';
-  const base = amNames[am.type] ?? am.type;
+  const base = amNames[am.type] ?? amValue(am);
   const effects = (am.effects ?? [])
     .map((e) => {
       if (e.type === 'condition' || e.type === 'element') return labelText(`game.${e.type}.${e.value}`) || String(e.value);

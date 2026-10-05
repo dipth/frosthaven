@@ -1,4 +1,5 @@
 import { Game, type GameModel } from '@fh/ghs-core';
+import type { EventCardAttack, EventCardAttackTarget, EventCardCondition, EventCardEffect } from '@fh/ghs-core/vendor/game/model/data/EventCard';
 import type { CampaignRules } from './rules';
 
 export type SessionMode = 'physical' | 'online';
@@ -24,6 +25,53 @@ export interface ExtState {
   pendingConclusions?: PendingConclusion[];
   /** Logic-affecting GHS settings for this campaign (see rules.ts). */
   rules?: CampaignRules;
+  /** The event card being resolved, shared by all clients (GHS event-card-draw dialog). */
+  eventDraft?: EventDraft;
+  /** What's left to do after resolving event cards (GHS event results in the entities menu). */
+  eventFollowUps?: EventFollowUp[];
+  /** A running outpost attack (GHS outpost-attack dialog). */
+  outpostAttack?: OutpostAttackState;
+}
+
+export interface EventDraft {
+  edition: string;
+  type: string;
+  cardId: string;
+  selected: number;
+  subSelections: number[];
+  checks: number[];
+  attack: boolean;
+}
+
+export interface EventFollowUp {
+  edition: string;
+  type: string;
+  cardId: string;
+  /** Effects and conditions the app can't apply; the group applies them by hand. */
+  manual: { kind: 'effect' | 'condition'; value: EventCardEffect | EventCardCondition }[];
+  /** Collective gains/losses and items to hand out (GHS event distribution dialog). */
+  distribution: EventCardEffect[];
+  /** Outpost attack to run: the card's attack and attack/target modifiers. */
+  outpostAttack?: { attack?: EventCardAttack; effects: EventCardEffect[] };
+}
+
+export interface OutpostAttackState {
+  /** Event card the attack comes from, if any. */
+  source?: { type: string; cardId: string };
+  /** Attack value before soldiers. */
+  attackValue: number;
+  targetNumber: number;
+  targetDescription?: string;
+  target?: EventCardAttackTarget;
+  /** Building names in the order they're attacked (eligible ones first). */
+  order: string[];
+  /** Number of buildings attacked so far. */
+  attacks: number;
+  /** Soldiers defending the current target. */
+  soldiers: number;
+  /** Town guard draw for the current target (GHS AttackResult). */
+  result?: { index: number; chooseOffset: number; value: number; stringified: string; type: string };
+  log: { building: string; state: 'normal' | 'damaged' | 'wrecked'; result?: number; soldiers: number }[];
 }
 
 export interface PendingConclusion {
