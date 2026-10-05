@@ -13,7 +13,7 @@ import { characterKey, type CampaignState } from '../state';
 const ref = z.object({ edition: z.string(), name: z.string() });
 type Ref = z.infer<typeof ref>;
 
-function assertOwner(state: CampaignState, payload: Ref, ctx: CommandContext) {
+export function assertOwner(state: CampaignState, payload: Ref, ctx: CommandContext) {
   const owner = state.ext.characterOwners[characterKey(payload)];
   if (!ctx.isAdmin && owner && owner !== ctx.userId) {
     throw new CommandError(`Character ${characterKey(payload)} belongs to another player`, 'forbidden');
@@ -28,7 +28,7 @@ function find(rt: Runtime, payload: Ref): Character {
   return character;
 }
 
-function name(rt: Runtime, c: Character) {
+export function name(rt: Runtime, c: Character) {
   return rt.gm.characterManager.characterName(c, true, true);
 }
 
@@ -47,7 +47,7 @@ export function availablePerks(c: Character): number {
 }
 
 /** A character command: validated ref + owner check + live Character. */
-function characterCommand<S extends z.ZodRawShape>(
+export function characterCommand<S extends z.ZodRawShape>(
   type: string,
   shape: S,
   run: (rt: Runtime, character: Character, payload: z.infer<z.ZodObject<S>> & Ref, ctx: CommandContext) => void

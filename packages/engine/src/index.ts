@@ -17,3 +17,5 @@ export * from './ghs-ui/event-text';
 export * from './ghs-ui/outpost-attack';
 export { draftCard, DISTRIBUTION_EFFECTS } from './commands/event-flow';
 export * from './ghs-ui/buildings';
+export * from './ghs-ui/brew';
+export * from './ghs-ui/enhancements';

@@ -6,6 +6,8 @@ import { api, type Me } from '../../lib/api';
 import { useCampaign } from '../../lib/campaign-store';
 import { characterName, ghsText, lootName } from '../../lib/labels';
 import { useMe } from '../../lib/me';
+import { Downtime } from './Downtime';
+import { RetirementDialog } from './Retirement';
 
 const RESOURCES = ['lumber', 'metal', 'hide', 'arrowvine', 'axenut', 'corpsecap', 'flamefruit', 'rockroot', 'snowthistle'] as const;
 
@@ -91,6 +93,7 @@ export function CharactersTab() {
         <RetiredPanel />
       </aside>
       {current ? <CharacterSheet key={characterKey(current)} character={current} users={users} /> : <p className="text-frost-400">No characters yet.</p>}
+      {state!.ext.retirement && <RetirementDialog draft={state!.ext.retirement} />}
     </div>
   );
 }
@@ -236,6 +239,8 @@ function CharacterSheet({ character, users }: { character: Character; users: Me[
         </Panel>
       </div>
 
+      <Downtime character={character} canEdit={canEdit} run={run} />
+
       <Panel title="Notes">
         <NotesField value={progress.notes ?? ''} onSave={(notes) => run('character.setNotes', { notes })} />
       </Panel>
@@ -245,8 +250,15 @@ function CharacterSheet({ character, users }: { character: Character; users: Me[
           <button className="btn" onClick={() => confirm('Set this character aside? It can be brought back later.') && run('character.setAside')}>
             Set aside
           </button>
-          <button className="btn btn-danger" onClick={() => confirm(`Retire ${character.title || characterName(character)}?`) && run('character.retire')}>
-            Retire
+          <button
+            className="btn"
+            title="Retire without personal quest rewards (e.g. already handled at the table)"
+            onClick={() => confirm(`Retire ${character.title || characterName(character)} without rewards?`) && run('character.retire')}
+          >
+            Retire (no rewards)
+          </button>
+          <button className="btn btn-danger" onClick={() => run('character.retireStart')}>
+            Retire…
           </button>
         </div>
       )}

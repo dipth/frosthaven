@@ -31,6 +31,41 @@ export interface ExtState {
   eventFollowUps?: EventFollowUp[];
   /** A running outpost attack (GHS outpost-attack dialog). */
   outpostAttack?: OutpostAttackState;
+  /** A retirement being reviewed before it's applied (GHS retirement dialog). */
+  retirement?: RetirementDraft;
+}
+
+export interface ScenarioRef {
+  index: string;
+  edition: string;
+  group?: string;
+}
+
+export interface ItemRef {
+  id: number | string;
+  edition: string;
+}
+
+/**
+ * What retiring a character will do, with the random draws fixed up front.
+ * 'manual' means the group draws from the physical deck (random draws off).
+ */
+export interface RetirementDraft {
+  character: string;
+  personalQuest?: string;
+  /** Character and personal quest conclusion sections to resolve afterwards. */
+  conclusions: { section: string; edition: string; reason: string }[];
+  /** Class unlocked by the personal quest (edition:name), if not unlocked yet. */
+  unlockCharacter?: string;
+  unlockEvent?: string;
+  unlockPQ?: string;
+  /** The PQ's class was already unlocked: a random scenario and item design instead. */
+  characterReward?: { scenario?: ScenarioRef | 'manual'; item?: ItemRef | 'manual' };
+  /** FH envelope building unlocked by the personal quest. */
+  envelopeBuilding?: string;
+  /** The PQ's envelope was already opened: a random section and blueprint (or +1 inspiration each). */
+  envelopeReward?: { section?: ScenarioRef | 'manual'; item?: ItemRef | 'manual' };
+  alreadyRetired: boolean;
 }
 
 export interface EventDraft {
