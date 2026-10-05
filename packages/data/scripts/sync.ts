@@ -7,6 +7,7 @@ import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { applyOfficialCrossover } from './crossover';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const pkgRoot = resolve(here, '..');
@@ -169,8 +170,10 @@ async function syncGhs() {
   const target = join(outDir, 'ghs');
   rmSync(target, { recursive: true, force: true });
   mkdirSync(target, { recursive: true });
+  const built = Object.fromEntries(editions.map((edition) => [edition, buildEdition(join(dir, 'data', edition), edition)]));
+  console.log(`  official crossover sheets applied to ${applyOfficialCrossover(built)} classes`);
   for (const edition of editions) {
-    const data = buildEdition(join(dir, 'data', edition), edition);
+    const data = built[edition]!;
     writeFileSync(join(target, `${edition}.json`), JSON.stringify(data));
     const counts = ['characters', 'monsters', 'scenarios', 'sections', 'items', 'events']
       .map((k) => `${k}=${(data[k] as unknown[] | undefined)?.length ?? 0}`)

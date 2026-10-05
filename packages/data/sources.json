@@ -3,13 +3,24 @@
     "repo": "https://github.com/Lurkars/gloomhavensecretariat.git",
     "commit": "5a49c8e4a6db0af14bdcdabf76f4770ad3fdf49a",
     "license": "AGPL-3.0 (code); game content (c) Cephalofair Games",
-    "editions": ["fh", "fh-crossover", "gh", "fc", "jotl"]
+    "editions": [
+      "fh",
+      "fh-crossover",
+      "gh",
+      "gh-envx",
+      "fc",
+      "jotl"
+    ]
   },
   "fhtts": {
     "repo": "https://github.com/gudyfr/fhtts",
     "commit": "eb1ac61a54e810e1b7f1988000b4b4deb2357cbc",
     "license": "CC BY-NC-SA 4.0",
-    "files": ["processedScenarios.human.json", "parser/tileInfos.json", "parser/tiles.json"]
+    "files": [
+      "processedScenarios.human.json",
+      "parser/tileInfos.json",
+      "parser/tiles.json"
+    ]
   },
   "worldhaven": {
     "repo": "https://github.com/any2cards/worldhaven",

@@ -74,7 +74,7 @@ export async function campaignRoutes(app: FastifyInstance, { db, hub }: { db: Db
     }
     const room = await hub.room(id);
     const imported = campaignFromGhs(parsed.game);
-    const state = { ghs: imported.ghs, ext: room.state.ext };
+    const state = { ghs: imported.ghs, ext: { ...room.state.ext, crossoverPerksToVerify: imported.ext.crossoverPerksToVerify } };
     await db.insert(imports).values({ campaignId: id, filename: body.filename, kind: parsed.kind, raw: body.data as object, createdBy: req.user!.id });
     if (parsed.kind === 'datadump' && parsed.settings) {
       await db.update(campaigns).set({ ghsSettings: parsed.settings }).where(eq(campaigns.id, id));

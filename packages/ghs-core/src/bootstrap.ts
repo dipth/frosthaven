@@ -3,10 +3,10 @@ import { gameManager } from './vendor/game/businesslogic/GameManager';
 import { settingsManager } from './vendor/game/businesslogic/SettingsManager';
 import { Settings } from './vendor/game/model/Settings';
 
-/** Editions loaded into the GHS runtime: Frosthaven plus official crossover classes. */
-export const EDITIONS = ['fh', 'fh-crossover', 'gh', 'fc', 'jotl'] as const;
+/** Editions loaded into the GHS runtime: Frosthaven plus the base editions of the official crossover classes. */
+export const EDITIONS = ['fh', 'fh-crossover', 'gh', 'gh-envx', 'fc', 'jotl'] as const;
 /** Editions enabled in GHS settings (fh-crossover is a 'content' edition extending fh). */
-export const ENABLED_EDITIONS = ['fh', 'fh-crossover', 'gh', 'fc', 'jotl'];
+export const ENABLED_EDITIONS = ['fh', 'fh-crossover', 'gh', 'gh-envx', 'fc', 'jotl'];
 
 /** Resolves a data file name (e.g. `fh.json`, `locale-en.json`) to its parsed JSON. */
 export type DataLoader = (file: string) => Promise<unknown>;

@@ -5,6 +5,7 @@
  * (or the legacy localStorage keys `ghs-game` + `ghs-settings`).
  */
 import { Settings, type GameModel } from '@fh/ghs-core';
+import { crossoverFromGhs, crossoverToGhs } from './crossover';
 import { loadGhs, snapshotGhs } from './runtime';
 import { emptyExt, type CampaignState } from './state';
 
@@ -51,11 +52,18 @@ export function normalizeGameModel(game: GameModel): GameModel {
 }
 
 export function campaignFromGhs(game: GameModel): CampaignState {
-  return { ghs: normalizeGameModel(game), ext: emptyExt() };
+  const converted = structuredClone(game);
+  const unverified = crossoverFromGhs(converted);
+  const ext = emptyExt();
+  if (unverified.length) {
+    ext.crossoverPerksToVerify = unverified;
+  }
+  return { ghs: normalizeGameModel(converted), ext };
 }
 
 export function exportGhsGame(state: CampaignState): GameModel {
   const game = structuredClone(state.ghs);
+  crossoverToGhs(game, state.ext.crossoverPerksToVerify);
   game.revision = (game.revision ?? 0) + 1;
   game.server = false;
   return game;

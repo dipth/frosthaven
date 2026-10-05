@@ -39,11 +39,12 @@ describe('engine commands', () => {
 
   it('adds an official crossover class', () => {
     let state = newCampaignState('Crossover');
-    state = run(state, 'character.add', { edition: 'fh-crossover', name: 'brute' });
-    expect(state.ghs.characters[0]).toMatchObject({ name: 'brute', edition: 'fh-crossover' });
+    state = run(state, 'character.add', { edition: 'gh', name: 'brute' });
+    expect(state.ghs.characters[0]).toMatchObject({ name: 'brute', edition: 'gh' });
   });
 
-  it('rejects unofficial crossover classes', () => {
+  it('rejects classes without an official crossover sheet', () => {
     expect(() => run(newCampaignState('x'), 'character.add', { edition: 'fh-crossover', name: 'beetle' })).toThrow(/Unknown character class/);
+    expect(() => run(newCampaignState('x'), 'character.add', { edition: 'fh-crossover', name: 'brute' })).toThrow(/Unknown character class/);
   });
 });

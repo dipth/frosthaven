@@ -49,7 +49,7 @@ export function OverviewTab() {
                 <span className="font-medium">{c.title || characterName(c)}</span>
                 <span className="text-xs text-frost-400">
                   {characterName(c)} · level {c.level}
-                  {c.edition === 'fh-crossover' && ' · crossover'}
+                  {c.edition !== 'fh' && ' · crossover'}
                 </span>
                 <select
                   className="input ml-auto w-auto py-1 text-xs"
@@ -75,7 +75,7 @@ export function OverviewTab() {
             {classes.map((c) => (
               <option key={c.value} value={c.value}>
                 {c.label}
-                {c.edition === 'fh-crossover' ? ' (crossover)' : ''}
+                {c.edition !== 'fh' ? ' (crossover)' : ''}
               </option>
             ))}
           </select>

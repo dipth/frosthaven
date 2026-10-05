@@ -11,6 +11,11 @@ export interface ExtState {
   characterOwners: Record<string, string>;
   /** User who receives actionable Forteller narration cues. */
   narratorUserId?: string;
+  /**
+   * Crossover characters (`edition:name`) whose official-sheet perks were
+   * guessed on import and should be checked against the physical sheet.
+   */
+  crossoverPerksToVerify?: string[];
 }
 
 export interface CampaignState {
