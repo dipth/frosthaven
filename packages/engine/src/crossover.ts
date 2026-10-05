@@ -13,7 +13,7 @@
  * top, and the exact official perks are written into the character's notes,
  * from which an import restores them.
  */
-import { gameManager, labelText, type GameModel } from '@fh/ghs-core';
+import { gameManager, labelText, plainText, type GameModel } from '@fh/ghs-core';
 import type { GameCharacterModel } from '@fh/ghs-core';
 
 const NOTE_START = '--- Frosthaven crossover perks (official sheet) ---';
@@ -79,7 +79,7 @@ function describeCard(card: RawPerkCard): string {
       return String(e.value);
     }
     if (e.type === 'custom') {
-      return labelText(String(e.value).replace(/^%|%$/g, ''));
+      return ghsString(String(e.value));
     }
     const inner = e.effects?.map((x) => (x.type === 'specialTarget' ? String(x.value) : `${x.type} ${x.value ?? ''}`.trim())).join(', ');
     return [`${e.type} ${e.value ?? ''}`.trim(), inner].filter(Boolean).join(', ');
@@ -88,10 +88,15 @@ function describeCard(card: RawPerkCard): string {
   return `${card.count ?? 1}x ${text}${am.rolling ? ' (rolling)' : ''}`;
 }
 
+/** GHS strings are either a bare label key or text with %label% placeholders. */
+function ghsString(value: string): string {
+  return value.includes('%') ? plainText(value) : labelText(value);
+}
+
 /** Plain-text description of a perk, for notes and the checklist. */
 export function describePerk(perk: RawPerk): string {
   const cards = perk.cards ?? [];
-  const custom = perk.custom ? labelText(perk.custom.replace(/^%|%$/g, '')) : '';
+  const custom = perk.custom ? ghsString(perk.custom) : '';
   switch (perk.type) {
     case 'add':
       return [`Add ${cards.map(describeCard).join(' and ')}`, custom].filter(Boolean).join('; ');

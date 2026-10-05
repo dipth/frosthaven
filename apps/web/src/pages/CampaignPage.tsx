@@ -1,13 +1,20 @@
 import { useEffect } from 'react';
 import { Link, Route, Switch, useRoute } from 'wouter';
 import { useCampaign } from '../lib/campaign-store';
+import { PendingSections } from '../components/PendingSections';
+import { CharactersTab } from './campaign/CharactersTab';
 import { DataTab } from './campaign/DataTab';
+import { DecksTab } from './campaign/DecksTab';
 import { LogTab } from './campaign/LogTab';
-import { OverviewTab } from './campaign/OverviewTab';
+import { OutpostTab } from './campaign/OutpostTab';
+import { PartyTab } from './campaign/PartyTab';
 import { ScenarioTab } from './campaign/ScenarioTab';
 
 const tabs = [
-  { path: '/', label: 'Campaign' },
+  { path: '/', label: 'Party' },
+  { path: '/characters', label: 'Characters' },
+  { path: '/outpost', label: 'Outpost' },
+  { path: '/decks', label: 'Decks' },
   { path: '/scenario', label: 'Scenario' },
   { path: '/log', label: 'Log' },
   { path: '/data', label: 'Data' }
@@ -56,14 +63,18 @@ export function CampaignPage({ id }: { id: string }) {
           </button>
         </div>
       </div>
-      <nav className="flex gap-1 border-b border-ink-600">
+      <PendingSections />
+      <nav className="flex gap-1 overflow-x-auto border-b border-ink-600">
         {tabs.map((tab) => (
           <TabLink key={tab.path} path={tab.path} label={tab.label} />
         ))}
       </nav>
       {lastError && <div className="rounded-lg border border-blood-400/40 bg-blood-400/10 px-3 py-2 text-sm text-blood-400">{lastError}</div>}
       <Switch>
-        <Route path="/" component={OverviewTab} />
+        <Route path="/" component={PartyTab} />
+        <Route path="/characters" component={CharactersTab} />
+        <Route path="/outpost" component={OutpostTab} />
+        <Route path="/decks" component={DecksTab} />
         <Route path="/scenario" component={ScenarioTab} />
         <Route path="/log">{() => <LogTab campaignId={id} />}</Route>
         <Route path="/data">{() => <DataTab campaignId={id} />}</Route>
@@ -77,7 +88,7 @@ function TabLink({ path, label }: { path: string; label: string }) {
   return (
     <Link
       href={path}
-      className={`-mb-px border-b-2 px-3 py-2 text-sm transition ${active ? 'border-ice-400 text-frost-100' : 'border-transparent text-frost-400 hover:text-frost-100'}`}
+      className={`-mb-px shrink-0 border-b-2 px-3 py-2 text-sm transition ${active ? 'border-ice-400 text-frost-100' : 'border-transparent text-frost-400 hover:text-frost-100'}`}
     >
       {label}
     </Link>

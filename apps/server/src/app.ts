@@ -4,7 +4,8 @@ import fastifyStatic from '@fastify/static';
 import websocket from '@fastify/websocket';
 import { GhsImportError } from '@fh/engine';
 import Fastify, { type FastifyServerOptions } from 'fastify';
-import { existsSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+import { existsSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { ZodError } from 'zod';
 import { authRoutes, SESSION_COOKIE } from './auth/routes';
@@ -100,11 +101,14 @@ export async function buildApp(options: AppOptions) {
 
   // Game data and images, signed-in users only.
   const generatedDir = options.generatedDir ?? env.generatedDir;
+  // Clients request /game-data/...?v=<dataVersion>, so responses can be cached for long.
+  const dataVersion = directoryVersion(generatedDir);
+  app.get('/api/meta', async () => ({ dataVersion }));
   await app.register(fastifyStatic, {
     root: generatedDir,
     prefix: '/game-data/',
     decorateReply: false,
-    maxAge: '1h'
+    maxAge: '30d'
   });
   const assetsDir = options.assetsDir ?? env.assetsDir;
   if (existsSync(assetsDir)) {
@@ -124,4 +128,25 @@ export async function buildApp(options: AppOptions) {
   }
 
   return { app, auth, hub };
+}
+
+/** A short hash that changes whenever any file in the directory tree changes. */
+function directoryVersion(dir: string): string {
+  const hash = createHash('sha256');
+  const walk = (path: string) => {
+    if (!existsSync(path)) {
+      return;
+    }
+    for (const entry of readdirSync(path, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
+      const full = `${path}/${entry.name}`;
+      if (entry.isDirectory()) {
+        walk(full);
+      } else {
+        const stat = statSync(full);
+        hash.update(`${full}:${stat.size}:${stat.mtimeMs}\n`);
+      }
+    }
+  };
+  walk(dir);
+  return hash.digest('hex').slice(0, 12);
 }
