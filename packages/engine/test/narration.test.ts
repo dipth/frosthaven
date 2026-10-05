@@ -33,3 +33,15 @@ it('lets only the narrator dismiss cues', () => {
   state = run(state, 'narration.dismiss', { id: state.ext.narration![0]!.id }, { userId: 'n', isAdmin: false });
   expect(state.ext.narration).toBeUndefined();
 });
+
+it('asks for a road event when a scenario starts', () => {
+  let state = run(newCampaignState('x'), 'character.add', { edition: 'fh', name: 'drifter' });
+  state = run(state, 'scenario.set', { index: '2' });
+  expect(state.ghs.eventDraw).toBe('summer-road');
+  state = run(state, 'eventDraw.start', {});
+  expect(state.ext.eventDraft?.type).toBe('summer-road');
+  state = run(state, 'eventDraw.select', { option: 0 });
+  state = run(state, 'eventDraw.accept');
+  expect(state.ghs.eventDraw).toBeUndefined();
+  expect(state.ghs.party.eventCards.at(-1)?.type).toBe('summer-road');
+});
