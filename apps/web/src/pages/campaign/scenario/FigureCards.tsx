@@ -237,7 +237,7 @@ function MonsterCard({ monster, onMenu }: { monster: Monster; onMenu(refs: Entit
             }}
           >
             <span className="text-sm text-frost-300">
-              {ability.name}
+              <span className="cursor-help underline decoration-frost-400/60 decoration-dotted underline-offset-4">{ability.name}</span>
               {ability.shuffle ? ' ↻' : ''}
             </span>
           </HoverTip>
