@@ -58,3 +58,24 @@ it('drops a loot token where a normal or elite monster dies', () => {
   expect(state.ext.board!.loot).toEqual([]);
   expect(() => run(state, 'board.pickUpLoot', { index: 0 })).toThrow(/No loot/);
 });
+
+it('places, moves and removes large character tokens on hexes', () => {
+  let state = run(newCampaignState('x'), 'character.add', { edition: 'fh', name: 'deathwalker' });
+  state = run(state, 'character.setOwner', { edition: 'fh', name: 'deathwalker', userId: 'alice' });
+  state = run(state, 'scenario.set', { index: '1' });
+  const alice = { userId: 'alice', isAdmin: false };
+  const bob = { userId: 'bob', isAdmin: false };
+  const deathwalker = { edition: 'fh', name: 'deathwalker' };
+  expect(() => run(state, 'board.addCharacterToken', { character: deathwalker, hex: { x: 1, y: 1 } }, bob)).toThrow();
+  state = run(state, 'board.addCharacterToken', { character: deathwalker, hex: { x: 1, y: 1 } }, alice);
+  state = run(state, 'board.addCharacterToken', { character: deathwalker, hex: { x: 2, y: 1 } }, alice);
+  expect(() => run(state, 'board.addCharacterToken', { character: deathwalker, hex: { x: 1, y: 1 } }, alice)).toThrow(/already/);
+  const [first, second] = state.ext.board!.characterTokens!;
+  expect(first).toMatchObject({ edition: 'fh', name: 'deathwalker', hex: { x: 1, y: 1 } });
+  expect(() => run(state, 'board.moveCharacterToken', { id: first!.id, hex: { x: 2, y: 1 } }, alice)).toThrow(/already/);
+  expect(() => run(state, 'board.moveCharacterToken', { id: first!.id, hex: { x: 3, y: 1 } }, bob)).toThrow();
+  state = run(state, 'board.moveCharacterToken', { id: first!.id, hex: { x: 3, y: 1 } }, alice);
+  expect(state.ext.board!.characterTokens!.map((t) => t.hex)).toEqual([{ x: 3, y: 1 }, { x: 2, y: 1 }]);
+  state = run(state, 'board.moveCharacterToken', { id: second!.id, hex: null }, alice);
+  expect(state.ext.board!.characterTokens!.map((t) => t.id)).toEqual([first!.id]);
+});

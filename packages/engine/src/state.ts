@@ -60,6 +60,16 @@ export interface BoardState {
   removed: string[];
   /** Loot tokens dropped by dead monsters. */
   loot?: Hex[];
+  /** Large character tokens placed in hexes (e.g. Deathwalker's shadows). */
+  characterTokens?: CharacterToken[];
+}
+
+export interface CharacterToken {
+  id: string;
+  /** The character the token belongs to. */
+  edition: string;
+  name: string;
+  hex: Hex;
 }
 
 export type CardPile = 'hand' | 'discard' | 'lost' | 'active';

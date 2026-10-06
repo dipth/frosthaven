@@ -3,7 +3,7 @@
  * calibration from packages/data; overlays, tokens and spawn points come from
  * the fhtts scenario layouts. Figures are dragged freely between hexes.
  */
-import { boardKey, hexCorners, hexKey, hexToPixel, pixelToHex, type BoardFile, type BoardItem, type EntityRef, type Hex, type TileOverride } from '@fh/engine';
+import { boardKey, characterKey, hexCorners, hexKey, hexToPixel, pixelToHex, type BoardFile, type BoardItem, type CharacterToken, type EntityRef, type Hex, type TileOverride } from '@fh/engine';
 import { Character, gameManager, labelText, Monster } from '@fh/ghs-core';
 import type { Entity } from '@fh/ghs-core/vendor/game/model/Entity';
 import type { Figure } from '@fh/ghs-core/vendor/game/model/Figure';
@@ -14,7 +14,7 @@ import { TipCard } from '../../../components/Tooltip';
 import { useMe } from '../../../lib/me';
 import { useCampaign } from '../../../lib/campaign-store';
 import { Conditions } from './FigureCards';
-import { entityMarkers, entityRef, maxHealth } from './helpers';
+import { displayName, entityMarkers, entityRef, maxHealth } from './helpers';
 
 const SIZE = 100;
 const R = SIZE / Math.sqrt(3);
@@ -100,6 +100,18 @@ function pieces(images: ImageIndex | undefined): Piece[] {
   return out;
 }
 
+/** A large character token as drawn: the owner's colour and icon. */
+interface TokenLook {
+  label: string;
+  color: string;
+  icon?: string;
+}
+
+function tokenLook(token: { edition: string; name: string }, images: ImageIndex | undefined): TokenLook {
+  const character = gameManager.game.figures.find((f): f is Character => f instanceof Character && f.edition === token.edition && f.name === token.name);
+  return { label: character ? displayName(character) : token.name, color: character?.color ?? '#94a3b8', icon: images?.icons[slug(token.name)] };
+}
+
 /** Board maps on the table: the scenario map plus revealed sections. */
 function visibleMaps(board: BoardFile) {
   const sections = new Set(gameManager.game.sections.map((s) => s.index));
@@ -156,6 +168,8 @@ export function Board({ onMenu }: { onMenu(refs: EntityRef[]): void }) {
   const [view, setView] = useState({ x: 0, y: 0, k: 0.5 });
   const [drag, setDrag] = useState<{ piece: Piece; at: { x: number; y: number }; moved: boolean; start: { x: number; y: number } }>();
   const [pan, setPan] = useState<{ x: number; y: number; vx: number; vy: number }>();
+  /** Dragging a large character token: a placed one (id) or a new one from the tray. */
+  const [tokenDrag, setTokenDrag] = useState<{ id?: string; edition: string; name: string; at: { x: number; y: number }; moved: boolean; start: { x: number; y: number } }>();
   /** Map tooltip ('item:<id>' or 'piece:<key>'): shown on mouse hover, or pinned by tapping an overlay. */
   const [tip, setTip] = useState<{ key: string; pinned: boolean }>();
   const hover = (key: string) => (on: boolean) => setTip((t) => (t?.pinned ? t : on ? { key, pinned: false } : t?.key === key ? undefined : t));
@@ -172,6 +186,12 @@ export function Board({ onMenu }: { onMenu(refs: EntityRef[]): void }) {
   const [autoPlace, setAutoPlace] = useState(false);
   const numbering = useRef(false);
   const placed = all.filter((p) => positions[p.key]);
+  const tokens = boardState?.characterTokens ?? [];
+  const owners = state!.ext.characterOwners;
+  // Characters whose tokens this player can put on the map.
+  const tokenCharacters = gameManager.game.figures.filter(
+    (f): f is Character => f instanceof Character && !f.absent && (!owners[characterKey(f)] || owners[characterKey(f)] === me.id || me.role === 'admin')
+  );
   const unplaced = all.filter((p) => !positions[p.key]);
 
   const maps = useMemo(() => (board ? visibleMaps(board) : []), [board, state!.ghs.sections?.length]);
@@ -230,6 +250,41 @@ export function Board({ onMenu }: { onMenu(refs: EntityRef[]): void }) {
         send('board.move', { ref: drag.piece.ref, hex: null }).catch(() => {});
       }
       setDrag(undefined);
+    };
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', up);
+    return () => {
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', up);
+    };
+  });
+
+  const startTokenDrag = (token: { id?: string; edition: string; name: string }, e: React.PointerEvent) => {
+    e.stopPropagation();
+    setTokenDrag({ ...token, at: toWorld(e.clientX, e.clientY), moved: false, start: { x: e.clientX, y: e.clientY } });
+  };
+
+  useEffect(() => {
+    if (!tokenDrag) return;
+    const move = (e: PointerEvent) => {
+      const moved = tokenDrag.moved || Math.hypot(e.clientX - tokenDrag.start.x, e.clientY - tokenDrag.start.y) > 5;
+      setTokenDrag({ ...tokenDrag, at: toWorld(e.clientX, e.clientY), moved });
+    };
+    const up = (e: PointerEvent) => {
+      const rect = svgRef.current!.getBoundingClientRect();
+      const inside = e.clientX >= rect.left && e.clientX <= rect.right && e.clientY >= rect.top && e.clientY <= rect.bottom;
+      const { id, edition, name } = tokenDrag;
+      const hex = pixelToHex(toWorld(e.clientX, e.clientY), SIZE);
+      if (id && !tokenDrag.moved) {
+        if (confirm(`Remove this ${tokenLook(tokenDrag, images).label} token from the map?`)) send('board.moveCharacterToken', { id, hex: null }).catch(() => {});
+      } else if (tokenDrag.moved && inside) {
+        if (id) send('board.moveCharacterToken', { id, hex }).catch(() => {});
+        else send('board.addCharacterToken', { character: { edition, name }, hex }).catch(() => {});
+      } else if (tokenDrag.moved && id) {
+        // Dropped off the map.
+        send('board.moveCharacterToken', { id, hex: null }).catch(() => {});
+      }
+      setTokenDrag(undefined);
     };
     window.addEventListener('pointermove', move);
     window.addEventListener('pointerup', up);
@@ -401,6 +456,17 @@ export function Board({ onMenu }: { onMenu(refs: EntityRef[]): void }) {
                 onTap={(e) => tapped(e) && setTip((t) => (t?.pinned && t.key === `item:${id}` ? undefined : { key: `item:${id}`, pinned: true }))}
               />
             ))}
+            {tokens.map((token) =>
+              tokenDrag?.id === token.id && tokenDrag.moved ? null : (
+                <CharacterTokenView
+                  key={token.id}
+                  look={tokenLook(token, images)}
+                  at={hexToPixel(token.hex, SIZE)}
+                  onPointerDown={(e) => startTokenDrag(token, e)}
+                  onHover={hover(`token:${token.id}`)}
+                />
+              )
+            )}
             {placed.map((piece) =>
               drag?.piece.key === piece.key && drag.moved ? null : (
                 <PieceView key={piece.key} piece={piece} at={hexToPixel(positions[piece.key]!, SIZE)} onPointerDown={(e) => startDrag(piece, e)} onHover={hover(`piece:${piece.key}`)} />
@@ -416,10 +482,18 @@ export function Board({ onMenu }: { onMenu(refs: EntityRef[]): void }) {
                 <PieceView piece={drag.piece} at={drag.at} ghost />
               </>
             )}
+            {tokenDrag?.moved && (
+              <>
+                <polygon points={hexCorners(pixelToHex(tokenDrag.at, SIZE), SIZE, 0.95)} fill="rgba(125,211,252,0.35)" pointerEvents="none" />
+                <CharacterTokenView look={tokenLook(tokenDrag, images)} at={tokenDrag.at} ghost />
+              </>
+            )}
           </g>
         </svg>
-        {tip && !drag?.moved && (
+        {tip && !drag?.moved && !tokenDrag?.moved && (
           <BoardTip
+            token={tokens.find((t) => `token:${t.id}` === tip.key)}
+            images={images}
             entry={items.find((i) => `item:${i.id}` === tip.key)}
             piece={placed.find((p) => `piece:${p.key}` === tip.key)}
             at={positions}
@@ -469,6 +543,23 @@ export function Board({ onMenu }: { onMenu(refs: EntityRef[]): void }) {
           <button className="btn ml-auto px-2 py-1 text-xs" onClick={() => send('board.numberStandees').catch(() => {})}>
             Draw standee numbers
           </button>
+        </div>
+      )}
+      {tokenCharacters.length > 0 && (
+        <div className="panel flex flex-wrap items-center gap-2 px-3 py-2 text-sm">
+          <span className="text-frost-400">Character tokens:</span>
+          {tokenCharacters.map((c) => (
+            <button
+              key={characterKey(c)}
+              className="flex touch-none items-center gap-1 rounded-full border border-ink-600 px-2 py-0.5 text-xs hover:border-ice-400"
+              onPointerDown={(e) => startTokenDrag({ edition: c.edition, name: c.name }, e)}
+              title="Drag onto the map to place a token"
+            >
+              <span className="h-2.5 w-2.5 rounded-full" style={{ background: c.color }} />
+              {displayName(c)}
+            </button>
+          ))}
+          <span className="text-xs text-frost-500">Drag onto a hex. Drag a placed token to move it, or off the map to remove it.</span>
         </div>
       )}
       {unplaced.length > 0 && (
@@ -715,18 +806,31 @@ function pieceKind(piece: Piece): string {
 }
 
 function BoardTip({
+  token,
+  images,
   entry,
   piece,
   at,
   removed,
   view
 }: {
+  token?: CharacterToken;
+  images: ImageIndex | undefined;
   entry?: { item: BoardItem };
   piece?: Piece;
   at: Record<string, Hex>;
   removed: boolean;
   view: { x: number; y: number; k: number };
 }) {
+  if (token) {
+    const c = hexToPixel(token.hex, SIZE);
+    const look = tokenLook(token, images);
+    return (
+      <MapTip at={{ x: c.x, top: c.y - R, bottom: c.y + R }} view={view} title={`${look.label} token`} kind="Character token" color={look.color}>
+        Stays until removed. Drag it to move it; click it or drag it off the map to remove it.
+      </MapTip>
+    );
+  }
   if (piece && at[piece.key]) {
     const c = hexToPixel(at[piece.key]!, SIZE);
     const hp = piece.entity.health;
@@ -826,6 +930,37 @@ function PieceView({
       })}
       <rect x={-r} y={r + 4} width={2 * r} height={8} rx={4} fill="#1e293b" />
       <rect x={-r} y={r + 4} width={(2 * r * Math.max(0, hp)) / Math.max(1, max)} height={8} rx={4} fill={hp / max > 0.5 ? '#4ade80' : hp / max > 0.25 ? '#facc15' : '#f87171'} />
+    </g>
+  );
+}
+
+/** A large character token in a hex: drawn under figures, so a standee on it leaves its rim showing. */
+function CharacterTokenView({
+  look,
+  at,
+  ghost,
+  onPointerDown,
+  onHover
+}: {
+  look: TokenLook;
+  at: { x: number; y: number };
+  ghost?: boolean;
+  onPointerDown?(e: React.PointerEvent): void;
+  onHover?(on: boolean): void;
+}) {
+  const r = R * 0.82;
+  return (
+    <g
+      transform={`translate(${at.x} ${at.y})`}
+      opacity={ghost ? 0.75 : 1}
+      onPointerDown={onPointerDown}
+      onPointerEnter={(e) => e.pointerType === 'mouse' && onHover?.(true)}
+      onPointerLeave={(e) => e.pointerType === 'mouse' && onHover?.(false)}
+      className={ghost ? 'pointer-events-none' : 'cursor-grab'}
+    >
+      <circle r={r} fill={look.color} fillOpacity={0.55} stroke={look.color} strokeWidth={8} />
+      <circle r={r - 4} fill="none" stroke="#0f172a" strokeWidth={2} strokeOpacity={0.6} />
+      {look.icon && <image href={assetUrl(look.icon)} x={-r * 0.6} y={-r * 0.6} width={r * 1.2} height={r * 1.2} opacity={0.85} />}
     </g>
   );
 }
