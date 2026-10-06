@@ -2,6 +2,7 @@ import {
   CommandError,
   executeCommand,
   projectFor,
+  REVEALING_COMMANDS,
   type CampaignState,
   type CommandContext,
   type CommandLog,
@@ -132,7 +133,7 @@ export class Room {
   }
 
   /** Reverts the most recent not-yet-undone event. */
-  undo(user: User): Promise<number> {
+  undo(user: User, force = false): Promise<number> {
     return this.serialize(async () => {
       const last = await this.db.query.events.findFirst({
         where: and(eq(events.campaignId, this.campaignId), isNull(events.undoneAt), ne(events.type, 'system.undo'), isNotNull(events.stateBefore)),
@@ -140,6 +141,9 @@ export class Room {
       });
       if (!last?.stateBefore) {
         throw new HubError('Nothing to undo', 'invalid_state');
+      }
+      if (!force && REVEALING_COMMANDS.has(last.type)) {
+        throw new HubError('The last action drew or revealed cards. Undo it anyway?', 'confirm_required');
       }
       await this.db.update(events).set({ undoneAt: new Date() }).where(eq(events.id, last.id));
       const summary = last.log.messages[0] ?? last.log.ghs[0]?.[0] ?? last.type;

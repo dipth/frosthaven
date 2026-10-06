@@ -5,7 +5,7 @@ import type { CampaignState } from './state';
 
 export const clientMessage = z.discriminatedUnion('t', [
   z.object({ t: z.literal('cmd'), id: z.string(), type: z.string(), payload: z.unknown() }),
-  z.object({ t: z.literal('undo'), id: z.string() }),
+  z.object({ t: z.literal('undo'), id: z.string(), force: z.boolean().optional() }),
   z.object({ t: z.literal('ping') })
 ]);
 export type ClientMessage = z.infer<typeof clientMessage>;
@@ -29,3 +29,26 @@ export type ServerMessage =
   | { t: 'reject'; id: string; code: string; error: string }
   | { t: 'presence'; users: PresenceUser[] }
   | { t: 'pong' };
+
+/**
+ * Commands that reveal hidden or random information (card draws, shuffles,
+ * reveals). Undoing them could be used to redraw, so the hub asks for
+ * confirmation first.
+ */
+export const REVEALING_COMMANDS = new Set([
+  'am.draw',
+  'am.shuffle',
+  'loot.draw',
+  'round.next',
+  'monster.drawAbility',
+  'monster.shuffleAbilities',
+  'eventDraw.start',
+  'eventDraw.redraw',
+  'events.shuffle',
+  'hands.reveal',
+  'hands.shortRest',
+  'battleGoals.deal',
+  'outpostAttack.draw',
+  'board.numberStandees',
+  'character.retireStart'
+]);

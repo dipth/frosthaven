@@ -237,7 +237,7 @@ export async function campaignRoutes(app: FastifyInstance, { db, hub }: { db: Db
       }
       try {
         const room = await roomPromise;
-        const revision = message.t === 'cmd' ? await room.dispatch(user, message.type, message.payload) : await room.undo(user);
+        const revision = message.t === 'cmd' ? await room.dispatch(user, message.type, message.payload) : await room.undo(user, message.force ?? false);
         client.send({ t: 'ack', id: message.id, revision });
       } catch (error) {
         const { code, error: text } = errorMessage(error);

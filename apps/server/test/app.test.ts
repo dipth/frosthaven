@@ -217,3 +217,26 @@ it('stores tile corrections that only admins may change', async () => {
   await app.inject({ method: 'DELETE', url: '/api/admin/tile-overrides/13-A', headers: { cookie: admin } });
   expect((await app.inject({ url: '/api/tile-overrides', headers: { cookie: player } })).json()).toEqual({});
 });
+
+it('asks before undoing a card draw', async () => {
+  const admin = await signIn('hal', 'admin');
+  const { id } = (await app.inject({ method: 'POST', url: '/api/campaigns', headers: { cookie: admin }, payload: { name: 'Undo' } })).json();
+  const ws = await app.injectWS(`/api/campaigns/${id}/ws`, { headers: { cookie: admin } });
+  const reply = (msgId: string) => nextMessage(ws, (m) => (m.t === 'ack' || m.t === 'reject') && m.id === msgId);
+  let r = reply('c1');
+  ws.send(JSON.stringify({ t: 'cmd', id: 'c1', type: 'character.add', payload: { edition: 'fh', name: 'drifter' } }));
+  await r;
+  r = reply('c2');
+  ws.send(JSON.stringify({ t: 'cmd', id: 'c2', type: 'scenario.set', payload: { index: '1' } }));
+  await r;
+  r = reply('c3');
+  ws.send(JSON.stringify({ t: 'cmd', id: 'c3', type: 'am.draw', payload: { deck: 'monster' } }));
+  expect(await r).toMatchObject({ t: 'ack' });
+  r = reply('u1');
+  ws.send(JSON.stringify({ t: 'undo', id: 'u1' }));
+  expect(await r).toMatchObject({ t: 'reject', code: 'confirm_required' });
+  r = reply('u2');
+  ws.send(JSON.stringify({ t: 'undo', id: 'u2', force: true }));
+  expect(await r).toMatchObject({ t: 'ack' });
+  ws.terminate();
+});

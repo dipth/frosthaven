@@ -143,7 +143,14 @@ export const useCampaign = create<CampaignStore>((set, get) => {
       return sendMessage({ t: 'cmd', id: `c${++seq}`, type, payload });
     },
     undo() {
-      return sendMessage({ t: 'undo', id: `u${++seq}` });
+      return sendMessage({ t: 'undo', id: `u${++seq}` }).catch((error: unknown) => {
+        // Undoing a draw or reveal could be used to redraw: ask first.
+        if (error instanceof CommandRejected && error.code === 'confirm_required' && confirm(error.message)) {
+          set({ lastError: undefined });
+          return sendMessage({ t: 'undo', id: `u${++seq}`, force: true });
+        }
+        throw error;
+      });
     },
     clearError() {
       set({ lastError: undefined });
