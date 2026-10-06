@@ -149,6 +149,10 @@ export function Board({ onMenu }: { onMenu(refs: EntityRef[]): void }) {
   const [view, setView] = useState({ x: 0, y: 0, k: 0.5 });
   const [drag, setDrag] = useState<{ piece: Piece; at: { x: number; y: number }; moved: boolean; start: { x: number; y: number } }>();
   const [pan, setPan] = useState<{ x: number; y: number; vx: number; vy: number }>();
+  /** Overlay tooltip: shown on mouse hover, or pinned by a tap/click. */
+  const [tip, setTip] = useState<{ id: string; pinned: boolean }>();
+  const pressedAt = useRef<{ x: number; y: number }>(undefined);
+  const tapped = (e: React.MouseEvent) => !pressedAt.current || Math.hypot(e.clientX - pressedAt.current.x, e.clientY - pressedAt.current.y) < 6;
 
   const boardState = state!.ext.board?.scenario === scenario?.index ? state!.ext.board : undefined;
   const positions = boardState?.positions ?? {};
@@ -344,7 +348,11 @@ export function Board({ onMenu }: { onMenu(refs: EntityRef[]): void }) {
         <svg
           ref={svgRef}
           className="h-full w-full touch-none select-none"
-          onPointerDown={(e) => setPan({ x: e.clientX, y: e.clientY, vx: view.x, vy: view.y })}
+          onPointerDown={(e) => {
+            pressedAt.current = { x: e.clientX, y: e.clientY };
+            setPan({ x: e.clientX, y: e.clientY, vx: view.x, vy: view.y });
+          }}
+          onClick={(e) => tapped(e) && setTip(undefined)}
         >
           <defs>
             <clipPath id="piece-clip" clipPathUnits="objectBoundingBox">
@@ -366,7 +374,16 @@ export function Board({ onMenu }: { onMenu(refs: EntityRef[]): void }) {
               />
             ))}
             {items.map(({ id, item }) => (
-              <BoardItemView key={id} item={item} removed={removed.has(id)} showStarts={showStarts} images={images} onClick={() => clickItem(id, item)} />
+              <BoardItemView
+                key={id}
+                item={item}
+                removed={removed.has(id)}
+                showStarts={showStarts}
+                images={images}
+                onClick={() => clickItem(id, item)}
+                onHover={(on) => setTip((t) => (t?.pinned ? t : on ? { id, pinned: false } : undefined))}
+                onTap={(e) => tapped(e) && setTip((t) => (t?.pinned && t.id === id ? undefined : { id, pinned: true }))}
+              />
             ))}
             {placed.map((piece) =>
               drag?.piece.key === piece.key && drag.moved ? null : (
@@ -385,6 +402,7 @@ export function Board({ onMenu }: { onMenu(refs: EntityRef[]): void }) {
             )}
           </g>
         </svg>
+        {tip && <OverlayTip entry={items.find((i) => i.id === tip.id)} removed={removed.has(tip.id)} view={view} />}
         {zoomHint && (
           <div className="pointer-events-none absolute inset-0 grid place-items-center bg-ink-950/40">
             <span className="rounded-lg bg-ink-900/90 px-3 py-1.5 text-sm text-frost-100">
@@ -497,13 +515,17 @@ function BoardItemView({
   removed,
   showStarts,
   images,
-  onClick
+  onClick,
+  onHover,
+  onTap
 }: {
   item: BoardItem;
   removed: boolean;
   showStarts: boolean;
   images: ImageIndex | undefined;
   onClick(): void;
+  onHover(on: boolean): void;
+  onTap(e: React.MouseEvent): void;
 }) {
   if (item.kind === 'monster') {
     return null; // spawn points are only used for placement
@@ -535,8 +557,17 @@ function BoardItemView({
   const image = item.image && removed ? item.image.replace('-closed', '-open') : item.image;
   const faded = removed && image === item.image;
   return (
-    <g onPointerDown={door ? (e) => e.stopPropagation() : undefined} onClick={door ? onClick : undefined} className={door ? 'cursor-pointer' : ''}>
-      <title>{`${item.name}${item.type ? ` (${item.type})` : ''}${door && item.trigger?.what?.name ? ` · section ${item.trigger.what.name}` : ''}`}</title>
+    <g
+      onPointerDown={door ? (e) => e.stopPropagation() : undefined}
+      onPointerEnter={(e) => e.pointerType === 'mouse' && onHover(true)}
+      onPointerLeave={(e) => e.pointerType === 'mouse' && onHover(false)}
+      onClick={(e) => {
+        e.stopPropagation();
+        if (door) onClick();
+        else onTap(e);
+      }}
+      className={door ? 'cursor-pointer' : 'cursor-help'}
+    >
       <g opacity={faded ? 0.4 : 1}>
         {image ? (
           <TerrainImage item={item} href={assetUrl(image)} />
@@ -548,7 +579,7 @@ function BoardItemView({
         <polygon
           key={hexKey(h)}
           points={hexCorners(h, SIZE, 0.9)}
-          fill={door ? 'transparent' : 'none'}
+          fill="transparent"
           stroke={border}
           strokeWidth={5}
           strokeOpacity={removed ? 0.4 : 0.9}
@@ -556,6 +587,68 @@ function BoardItemView({
         />
       ))}
     </g>
+  );
+}
+
+type Overlay = Extract<BoardItem, { kind: 'overlay' }>;
+
+/** What an overlay is and a short reminder of its rules. */
+function overlayInfo(item: Overlay, removed: boolean): { kind: string; text: string } {
+  const trap = gameManager.levelManager.trap();
+  const hazard = gameManager.levelManager.terrain();
+  if (/door/i.test(item.name + item.type)) {
+    const section = item.trigger?.action === 'reveal' ? item.trigger.what?.name : undefined;
+    return removed
+      ? { kind: 'Open door', text: 'A normal hex now. Click to close it again.' }
+      : {
+          kind: 'Closed door',
+          text: `Blocks line of sight, and monsters can't move through it. A character entering it opens it${section ? ` and reveals section ${section}` : ''}. Click to open.`
+        };
+  }
+  switch (item.type) {
+    case 'Obstacle':
+      return { kind: item.type, text: "Can't be entered unless flying or jumping. Doesn't block line of sight." };
+    case 'Difficult Terrain':
+      return { kind: item.type, text: 'Entering it costs 2 movement points. Flying ignores it; a jump only pays for the hex it ends in.' };
+    case 'Hazardous Terrain':
+      return { kind: item.type, text: `A figure entering it without flying or jumping suffers ${hazard} damage (half trap damage).` };
+    case 'Icy Terrain':
+      return { kind: item.type, text: 'A figure entering it with a move (not flying or jumping) slides one more hex in the same direction, if it can.' };
+    case 'Trap':
+      return { kind: item.type, text: `Springs when a figure enters it without flying or jumping: ${trap} damage plus any effects the scenario lists. Then it's removed.` };
+    case 'Treasure':
+      return { kind: item.type, text: "A character loots it by ending a move here or with a loot ability. See the scenario's treasure list." };
+    case 'Objective':
+      return { kind: item.type, text: "Scenario objective. See the scenario's special rules." };
+    case 'Pressure Plate':
+      return { kind: item.type, text: "Triggers when a figure occupies it. See the scenario's special rules." };
+    case 'Wall':
+      return { kind: item.type, text: "Can't be entered and blocks line of sight." };
+  }
+  if (/corridor/i.test(item.name + item.type)) return { kind: 'Corridor', text: 'A normal hex that joins map tiles.' };
+  return { kind: item.type || 'Overlay', text: 'See the scenario book for how this tile works.' };
+}
+
+function OverlayTip({ entry, removed, view }: { entry?: { item: BoardItem }; removed: boolean; view: { x: number; y: number; k: number } }) {
+  if (!entry || entry.item.kind !== 'overlay') return null;
+  const item = entry.item;
+  const points = item.hexes.map((h) => hexToPixel(h, SIZE));
+  const x = view.x + view.k * (points.reduce((sum, p) => sum + p.x, 0) / points.length);
+  const y = view.y + view.k * (Math.min(...points.map((p) => p.y)) - R);
+  const { kind, text } = overlayInfo(item, removed);
+  const door = /door/i.test(item.name + item.type);
+  const color = door ? OVERLAY_BORDER['Door'] : (OVERLAY_BORDER[item.type] ?? '#94a3b8');
+  return (
+    <div className="pointer-events-none absolute z-10 w-60 -translate-x-1/2 -translate-y-full pb-2" style={{ left: x, top: y }}>
+      <div className="rounded-lg border border-ink-600 bg-ink-900/95 px-3 py-2 text-sm shadow-lg">
+        <div className="font-medium text-frost-100">{item.name}</div>
+        <div className="mb-1 flex items-center gap-1.5 text-xs text-frost-400">
+          <span className="h-2.5 w-2.5 rounded-full" style={{ background: color }} />
+          {kind}
+        </div>
+        <div className="text-xs text-frost-200">{text}</div>
+      </div>
+    </div>
   );
 }
 
