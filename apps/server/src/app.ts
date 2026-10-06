@@ -9,6 +9,7 @@ import { existsSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { ZodError } from 'zod';
 import { authRoutes, SESSION_COOKIE } from './auth/routes';
+import { backupRoutes } from './backups';
 import { AuthService } from './auth/service';
 import { CampaignHub } from './campaigns/hub';
 import { campaignRoutes } from './campaigns/routes';
@@ -36,6 +37,7 @@ export interface AppOptions {
   webDistDir?: string;
   assetsDir?: string;
   generatedDir?: string;
+  backupDir?: string;
 }
 
 export async function buildApp(options: AppOptions) {
@@ -45,7 +47,7 @@ export async function buildApp(options: AppOptions) {
 
   await app.register(cookie, { secret: options.sessionSecret ?? env.sessionSecret });
   await app.register(rateLimit, { global: false });
-  await app.register(websocket, { options: { maxPayload: 1024 * 1024 } });
+  await app.register(websocket, { options: { maxPayload: 1024 * 1024, perMessageDeflate: true } });
 
   app.addHook('onRequest', async (req, reply) => {
     reply.header('x-robots-tag', 'noindex, nofollow');
@@ -98,6 +100,7 @@ export async function buildApp(options: AppOptions) {
 
   await app.register(authRoutes, { auth });
   await app.register(campaignRoutes, { db: options.db, hub });
+  await app.register(backupRoutes, { db: options.db, dir: options.backupDir ?? env.backupDir });
 
   // Game data and images, signed-in users only.
   const generatedDir = options.generatedDir ?? env.generatedDir;

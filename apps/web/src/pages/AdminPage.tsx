@@ -98,6 +98,63 @@ export function AdminPage() {
         </ul>
         {error && <p className="text-sm text-blood-400">{error}</p>}
       </section>
+      <Backups />
     </div>
+  );
+}
+
+interface BackupFile {
+  campaign: string;
+  file: string;
+  revision: number;
+  createdAt: string;
+}
+
+/** Automatic campaign backups on the server volume (GHS dumps + full app state). */
+function Backups() {
+  const [files, setFiles] = useState<BackupFile[]>([]);
+  const [busy, setBusy] = useState(false);
+  const refresh = () => api<BackupFile[]>('/api/admin/backups').then(setFiles, () => {});
+  useEffect(() => {
+    refresh();
+  }, []);
+  const ghs = files.filter((f) => f.file.endsWith('.ghs.json'));
+  return (
+    <section className="panel grid content-start gap-3 p-4">
+      <div className="flex items-center gap-2">
+        <h2 className="font-medium">Backups</h2>
+        <button
+          className="btn ml-auto"
+          disabled={busy}
+          onClick={() => {
+            setBusy(true);
+            api('/api/admin/backups', { method: 'POST' })
+              .then(refresh)
+              .finally(() => setBusy(false));
+          }}
+        >
+          Back up now
+        </button>
+      </div>
+      <p className="text-sm text-frost-400">
+        Every few hours each changed campaign is saved as a Secretariat data dump (importable in GHS) and as the app's full state. The newest 30 per campaign are kept.
+      </p>
+      <ul className="max-h-80 divide-y divide-ink-600 overflow-y-auto text-sm">
+        {ghs.map((f) => (
+          <li key={f.campaign + f.file} className="flex flex-wrap items-center gap-2 py-1.5">
+            <span className="flex-1">
+              {f.campaign} <span className="text-xs text-frost-400">rev {f.revision} · {f.createdAt.replace('T', ' ')}</span>
+            </span>
+            <a className="text-xs text-ice-300 hover:underline" href={`/api/admin/backups/${f.campaign}/${f.file}`}>
+              GHS dump
+            </a>
+            <a className="text-xs text-ice-300 hover:underline" href={`/api/admin/backups/${f.campaign}/${f.file.replace('.ghs.json', '.app.json')}`}>
+              app state
+            </a>
+          </li>
+        ))}
+        {ghs.length === 0 && <li className="py-2 text-frost-400">No backups yet.</li>}
+      </ul>
+    </section>
   );
 }

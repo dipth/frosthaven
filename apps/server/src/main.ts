@@ -1,5 +1,6 @@
 import { bootstrapGhsNode } from '@fh/ghs-core/node';
 import { buildApp } from './app';
+import { scheduleBackups } from './backups';
 import { createDb } from './db';
 import { env } from './env';
 
@@ -10,3 +11,4 @@ const { app } = await buildApp({
   logger: env.production ? true : { transport: undefined, level: 'info' }
 });
 await app.listen({ port: env.port, host: env.host });
+scheduleBackups(db, env.backupDir, app.log);

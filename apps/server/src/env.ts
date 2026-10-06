@@ -21,6 +21,7 @@ export const env = {
   host: process.env['HOST'] ?? '0.0.0.0',
   production: process.env['NODE_ENV'] === 'production',
   assetsDir: resolve(repoRoot, process.env['ASSETS_DIR'] ?? '.assets'),
+  backupDir: resolve(repoRoot, process.env['BACKUP_DIR'] ?? '.backups'),
   ghsDataDir: resolve(repoRoot, process.env['GHS_DATA_DIR'] ?? 'packages/data/generated/ghs'),
   generatedDir: resolve(repoRoot, process.env['GENERATED_DIR'] ?? 'packages/data/generated'),
   webDistDir: resolve(repoRoot, process.env['WEB_DIST_DIR'] ?? 'apps/web/dist')

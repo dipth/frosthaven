@@ -191,3 +191,19 @@ it('starts a new campaign with an empty checklist after GHS setup', async () => 
   expect(list.items).toEqual([]);
   ws.terminate();
 });
+
+it('backs up changed campaigns as GHS dumps for admins', async () => {
+  const { mkdtempSync } = await import('node:fs');
+  const { tmpdir } = await import('node:os');
+  const { join } = await import('node:path');
+  const { runBackups, listBackups } = await import('../src/backups');
+  const dir = mkdtempSync(join(tmpdir(), 'fh-backups-'));
+  const admin = await signIn('dora', 'admin');
+  await app.inject({ method: 'POST', url: '/api/campaigns', headers: { cookie: admin }, payload: { name: 'Backed Up' } });
+  expect(await runBackups(db, dir)).toBe(1);
+  expect(await runBackups(db, dir)).toBe(0);
+  const files = listBackups(dir);
+  expect(files.map((f) => f.file.split('.').slice(-2).join('.')).sort()).toEqual(['app.json', 'ghs.json']);
+  const player = await signIn('eve');
+  expect((await app.inject({ url: '/api/admin/backups', headers: { cookie: player } })).statusCode).toBe(403);
+});
