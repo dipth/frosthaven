@@ -5,7 +5,11 @@ import {
   exportGhsGame,
   GhsImportError,
   newCampaignState,
+  normalizeCampaignState,
   parseGhsFile,
+  physicalChecklist,
+  projectFor,
+  type CampaignState,
   type ServerMessage
 } from '@fh/engine';
 import { and, desc, eq, isNull, lt } from 'drizzle-orm';
@@ -31,7 +35,12 @@ export async function campaignRoutes(app: FastifyInstance, { db, hub }: { db: Db
 
   app.post('/api/campaigns', async (req, reply) => {
     const { name } = z.object({ name: z.string().trim().min(1).max(100) }).parse(req.body);
-    const [campaign] = await db.insert(campaigns).values({ name, state: newCampaignState(name) }).returning({ id: campaigns.id });
+    const state = normalizeCampaignState(newCampaignState(name));
+    // A new campaign starts with the physical box in sync (both empty).
+    const [campaign] = await db
+      .insert(campaigns)
+      .values({ name, state, physicalBaseline: state, baselineRevision: 0 })
+      .returning({ id: campaigns.id });
     return reply.code(201).send(campaign);
   });
 
@@ -42,12 +51,13 @@ export async function campaignRoutes(app: FastifyInstance, { db, hub }: { db: Db
     if (parsed.kind === 'settings') {
       throw new GhsImportError('This is a GHS settings file; export the game or a data dump instead');
     }
-    const state = campaignFromGhs(parsed.game, parsed.kind === 'datadump' ? parsed.settings : undefined);
+    const state = normalizeCampaignState(campaignFromGhs(parsed.game, parsed.kind === 'datadump' ? parsed.settings : undefined));
     const name = body.name || state.ghs.party?.name || body.filename || 'Imported campaign';
     const campaign = await db.transaction(async (tx) => {
       const [created] = await tx
         .insert(campaigns)
-        .values({ name, state, ghsSettings: parsed.kind === 'datadump' ? parsed.settings : undefined })
+        // Imported from Secretariat, which tracked the physical box: that's the baseline.
+        .values({ name, state, physicalBaseline: state, baselineRevision: 0, ghsSettings: parsed.kind === 'datadump' ? parsed.settings : undefined })
         .returning({ id: campaigns.id });
       await tx.insert(imports).values({
         campaignId: created!.id,
@@ -83,6 +93,7 @@ export async function campaignRoutes(app: FastifyInstance, { db, hub }: { db: Db
       await db.update(campaigns).set({ ghsSettings: parsed.settings }).where(eq(campaigns.id, id));
     }
     const revision = await room.replaceState(req.user!, 'system.import', state, `Imported GHS ${parsed.kind}${body.filename ? ` from ${body.filename}` : ''}`);
+    await db.update(campaigns).set({ physicalBaseline: room.state, baselineRevision: revision }).where(eq(campaigns.id, id));
     return { revision };
   });
 
@@ -97,6 +108,39 @@ export async function campaignRoutes(app: FastifyInstance, { db, hub }: { db: Db
     const body = format === 'game' ? exportGhsGame(campaign.state) : exportGhsDatadump(campaign.state, campaign.ghsSettings ?? undefined);
     const filename = format === 'game' ? `ghs-game_${slug(campaign.name)}_${date}.json` : `ghs-data-dump_${slug(campaign.name)}_${date}.json`;
     return reply.header('content-disposition', `attachment; filename="${filename}"`).type('application/json').send(JSON.stringify(body));
+  });
+
+  /** What to change in the physical box since it was last in sync with the app. */
+  app.get('/api/campaigns/:id/checklist', async (req, reply) => {
+    const { id } = idParams.parse(req.params);
+    const room = await hub.room(id);
+    const campaign = await db.query.campaigns.findFirst({
+      where: eq(campaigns.id, id),
+      columns: { physicalBaseline: true, baselineRevision: true }
+    });
+    if (!campaign) {
+      return reply.code(404).send({ error: 'Campaign not found' });
+    }
+    if (!campaign.physicalBaseline) {
+      return { baselineRevision: null, items: [] };
+    }
+    // Hidden information (other players' quests and goals) stays hidden here too.
+    const view = (state: CampaignState) => projectFor({ ghs: state.ghs, ext: room.state.ext }, req.user!.id).ghs;
+    return { baselineRevision: campaign.baselineRevision, items: physicalChecklist(view(campaign.physicalBaseline), view(room.state)) };
+  });
+
+  /** The group has updated the physical box: the current state becomes the new baseline. */
+  app.post('/api/campaigns/:id/checklist/synced', async (req) => {
+    const { id } = idParams.parse(req.params);
+    const room = await hub.room(id);
+    const revision = await room.replaceState(
+      req.user!,
+      'system.physicalSync',
+      { ...room.state, ext: { ...room.state.ext, checklistTicks: [] } },
+      'Marked the physical box as in sync'
+    );
+    await db.update(campaigns).set({ physicalBaseline: room.state, baselineRevision: revision }).where(eq(campaigns.id, id));
+    return { revision };
   });
 
   app.get('/api/campaigns/:id/events', async (req) => {

@@ -142,3 +142,13 @@ export function runCommand<S extends z.ZodType>(
     log: { ghs: gameManager.stateManager.drainActionLog(), messages }
   };
 }
+
+/**
+ * The state as it is after GHS' load-time setup (event decks built, starting
+ * buildings placed, migrations). Used for physical baselines, so that setup
+ * doesn't show up as changes to make in the box.
+ */
+export function normalizeCampaignState(state: CampaignState): CampaignState {
+  loadGhs(state.ghs, sessionRules(state.ext));
+  return { ghs: snapshotGhs(), ext: structuredClone(state.ext) };
+}

@@ -42,6 +42,8 @@ export interface ExtState {
   hands?: Record<string, HandState>;
   /** Online mode: what's on the hex map of the current scenario. */
   board?: BoardState;
+  /** Physical sync checklist items (ids) already done at the box. */
+  checklistTicks?: string[];
 }
 
 export interface Hex {

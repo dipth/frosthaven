@@ -155,3 +155,39 @@ describe('campaigns', () => {
     expect(res.statusCode).toBe(400);
   });
 });
+
+describe('physical sync checklist', () => {
+  it('lists changes since the baseline until the box is marked as synced', async () => {
+    const alice = await signIn('alice', 'admin');
+    const { id } = (await app.inject({ method: 'POST', url: '/api/campaigns', headers: { cookie: alice }, payload: { name: 'Sync' } })).json();
+    const empty = (await app.inject({ url: `/api/campaigns/${id}/checklist`, headers: { cookie: alice } })).json();
+    expect(empty).toEqual({ baselineRevision: 0, items: [] });
+
+    const ws = await app.injectWS(`/api/campaigns/${id}/ws`, { headers: { cookie: alice } });
+    const ack = nextMessage(ws, (m) => m.t === 'ack' || m.t === 'reject');
+    ws.send(JSON.stringify({ t: 'cmd', id: 'c1', type: 'party.setMorale', payload: { value: 4 } }));
+    expect(await ack).toMatchObject({ t: 'ack' });
+
+    const list = (await app.inject({ url: `/api/campaigns/${id}/checklist`, headers: { cookie: alice } })).json();
+    expect(list.items.map((i: { text: string }) => i.text)).toContain('Set morale to 4 (+4)');
+
+    const synced = await app.inject({ method: 'POST', url: `/api/campaigns/${id}/checklist/synced`, headers: { cookie: alice } });
+    expect(synced.statusCode).toBe(200);
+    const after = (await app.inject({ url: `/api/campaigns/${id}/checklist`, headers: { cookie: alice } })).json();
+    expect(after.items).toEqual([]);
+    expect(after.baselineRevision).toBe(synced.json().revision);
+    ws.terminate();
+  });
+});
+
+it('starts a new campaign with an empty checklist after GHS setup', async () => {
+  const alice = await signIn('carol', 'admin');
+  const { id } = (await app.inject({ method: 'POST', url: '/api/campaigns', headers: { cookie: alice }, payload: { name: 'Fresh' } })).json();
+  const ws = await app.injectWS(`/api/campaigns/${id}/ws`, { headers: { cookie: alice } });
+  const ack = nextMessage(ws, (m) => m.t === 'ack' || m.t === 'reject');
+  ws.send(JSON.stringify({ t: 'cmd', id: 'c1', type: 'party.rename', payload: { name: 'Fresh 2' } }));
+  expect(await ack).toMatchObject({ t: 'ack' });
+  const list = (await app.inject({ url: `/api/campaigns/${id}/checklist`, headers: { cookie: alice } })).json();
+  expect(list.items).toEqual([]);
+  ws.terminate();
+});

@@ -23,3 +23,4 @@ export * from './narration';
 export { availableAbilityCards, handSize } from './commands/hands';
 export { boardKey } from './commands/board';
 export * from './hex';
+export * from './checklist';

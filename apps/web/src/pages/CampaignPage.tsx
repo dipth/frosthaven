@@ -11,6 +11,7 @@ import { LogTab } from './campaign/LogTab';
 import { OutpostTab } from './campaign/OutpostTab';
 import { PartyTab } from './campaign/PartyTab';
 import { ScenarioTab } from './campaign/ScenarioTab';
+import { SyncTab } from './campaign/SyncTab';
 
 const tabs = [
   { path: '/', label: 'Party' },
@@ -18,6 +19,7 @@ const tabs = [
   { path: '/outpost', label: 'Outpost' },
   { path: '/decks', label: 'Decks' },
   { path: '/scenario', label: 'Scenario' },
+  { path: '/sync', label: 'Box sync' },
   { path: '/log', label: 'Log' },
   { path: '/data', label: 'Data' }
 ];
@@ -80,6 +82,7 @@ export function CampaignPage({ id }: { id: string }) {
         <Route path="/outpost" component={OutpostTab} />
         <Route path="/decks" component={DecksTab} />
         <Route path="/scenario" component={ScenarioTab} />
+        <Route path="/sync">{() => <SyncTab campaignId={id} />}</Route>
         <Route path="/log">{() => <LogTab campaignId={id} />}</Route>
         <Route path="/data">{() => <DataTab campaignId={id} />}</Route>
       </Switch>

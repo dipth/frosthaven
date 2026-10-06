@@ -13,6 +13,7 @@ interface PlaySession {
 
 export function DataTab({ campaignId }: { campaignId: string }) {
   const me = useMe();
+  const { state } = useCampaign();
   const revision = useCampaign((s) => s.revision);
   const [sessions, setSessions] = useState<PlaySession[]>([]);
   const [message, setMessage] = useState<string>();
@@ -24,6 +25,14 @@ export function DataTab({ campaignId }: { campaignId: string }) {
   const active = sessions.find((s) => !s.endedAt);
 
   async function startSession(mode: 'physical' | 'online') {
+    if (mode === 'physical') {
+      const checklist = await api<{ items: { id: string }[] }>(`/api/campaigns/${campaignId}/checklist`).catch(() => undefined);
+      const ticks = new Set(state!.ext.checklistTicks ?? []);
+      const open = checklist?.items.filter((i) => !ticks.has(i.id)).length ?? 0;
+      if (open && !confirm(`The physical box is not in sync with the app yet (${open} change${open === 1 ? '' : 's'} on the Box sync tab). Start the physical session anyway?`)) {
+        return;
+      }
+    }
     await api(`/api/campaigns/${campaignId}/sessions`, { method: 'POST', json: { mode } });
   }
 
