@@ -477,6 +477,39 @@ const OVERLAY_FILL: Record<string, string> = {
   Wall: 'rgba(30,30,30,0.7)'
 };
 
+/** Terrain drawn with its token art, outlined in a colour per terrain type. */
+const TERRAIN_BORDER: Record<string, string> = {
+  Obstacle: '#d6d3d1',
+  'Difficult Terrain': '#38bdf8',
+  'Hazardous Terrain': '#f97316',
+  'Icy Terrain': '#e0f2fe'
+};
+
+/**
+ * Token art for a 1-, 2- or 3-hex overlay. The art is drawn for the unrotated
+ * shape in boards.ts (hex 0 at the origin, then west, then north-west) and
+ * turned counter-clockwise by the overlay's orientation about hex 0.
+ */
+function TerrainImage({ item, href }: { item: Extract<BoardItem, { kind: 'overlay' }>; href: string }) {
+  const shape = [{ x: 0, y: 0 }, { x: -1, y: 0 }, { x: -1, y: 1 }].slice(0, Math.min(3, item.hexes.length)).map((h) => hexToPixel(h, SIZE));
+  const x0 = Math.min(...shape.map((p) => p.x)) - SIZE / 2;
+  const x1 = Math.max(...shape.map((p) => p.x)) + SIZE / 2;
+  const y0 = Math.min(...shape.map((p) => p.y)) - R;
+  const y1 = Math.max(...shape.map((p) => p.y)) + R;
+  const at = hexToPixel(item.hexes[0]!, SIZE);
+  return (
+    <image
+      href={href}
+      x={x0}
+      y={y0}
+      width={x1 - x0}
+      height={y1 - y0}
+      transform={`translate(${at.x} ${at.y}) rotate(${-item.orientation})`}
+      pointerEvents="none"
+    />
+  );
+}
+
 function BoardItemView({
   item,
   removed,
@@ -516,6 +549,18 @@ function BoardItemView({
   const door = /door/i.test(item.name + item.type);
   const corridor = /corridor/i.test(item.name + item.type);
   if (removed && !door) return null;
+  const border = TERRAIN_BORDER[item.type];
+  if (border && item.image) {
+    return (
+      <g>
+        <title>{`${item.name} (${item.type})`}</title>
+        <TerrainImage item={item} href={assetUrl(item.image)} />
+        {item.hexes.map((h) => (
+          <polygon key={hexKey(h)} points={hexCorners(h, SIZE, 0.9)} fill="none" stroke={border} strokeWidth={5} strokeOpacity={0.9} />
+        ))}
+      </g>
+    );
+  }
   const fill = door ? (removed ? 'rgba(34,197,94,0.15)' : 'rgba(34,197,94,0.45)') : corridor ? 'rgba(255,255,255,0.08)' : (OVERLAY_FILL[item.type] ?? 'rgba(148,163,184,0.3)');
   const interactive = door;
   return (
