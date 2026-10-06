@@ -15,6 +15,7 @@ import { narrationCommands, ruleCommands } from './narration';
 import { handCommands } from './hands';
 import { boardCommands } from './board';
 import { checklistCommands } from './checklist';
+import { gardenPetCommands } from './garden-pets';
 import { outpostAttackCommands } from './outpost-attack';
 import { partyCommands } from './party';
 import { playCommands } from './play';
@@ -83,7 +84,7 @@ const characterSetOwner = defineCommand({
   }
 });
 
-const allCommands: CommandDef[] = [partyRename, characterAdd, characterSetOwner, ...playCommands, ...scenarioCommands, ...partyCommands, ...characterCommands, ...eventCommands, ...eventFlowCommands, ...outpostAttackCommands, ...buildingCommands, ...itemCommands, ...progressionCommands, ...retirementCommands, ...outpostPhaseCommands, ...narrationCommands, ...ruleCommands, ...handCommands, ...boardCommands, ...checklistCommands];
+const allCommands: CommandDef[] = [partyRename, characterAdd, characterSetOwner, ...playCommands, ...scenarioCommands, ...partyCommands, ...characterCommands, ...eventCommands, ...eventFlowCommands, ...outpostAttackCommands, ...buildingCommands, ...itemCommands, ...progressionCommands, ...retirementCommands, ...outpostPhaseCommands, ...narrationCommands, ...ruleCommands, ...handCommands, ...boardCommands, ...checklistCommands, ...gardenPetCommands];
 
 export const commands: Record<string, CommandDef> = Object.fromEntries(allCommands.map((c) => [c.type, c]));
 

@@ -223,6 +223,11 @@ export function buildBoards(outDir: string, calibrationFile: string) {
   for (const t of wh('tokens.json').filter((t) => t.expansion === 'frosthaven' && t.image.includes('/conditions/'))) {
     conditions[slug(t.name)] = t.image;
   }
-  writeFileSync(join(outDir, 'images.json'), JSON.stringify({ monsters, icons, abilityCards, conditions }));
+  const pets: Record<string, string> = {};
+  for (const p of wh('pet-cards.json').filter((p) => p.expansion === 'frosthaven' && !/-back\./.test(p.image))) {
+    const id = /^(\d+)\s/.exec(String(p.name))?.[1];
+    if (id) pets[id] = p.image;
+  }
+  writeFileSync(join(outDir, 'images.json'), JSON.stringify({ monsters, icons, abilityCards, conditions, pets }));
   console.log(`  images: ${Object.keys(monsters).length} monsters, ${Object.keys(abilityCards).length} card sets`);
 }

@@ -1,5 +1,5 @@
 /** The Frosthaven outpost phase, step by step, shared by everyone in the campaign. */
-import { buildingStep, cardsToPick, carpenterDiscount, OUTPOST_PHASE_STEPS, type OutpostPhase as Phase, type OutpostPhaseStep } from '@fh/engine';
+import { buildingStep, cardsToPick, carpenterDiscount, OUTPOST_PHASE_STEPS, RULE_DEFAULTS, type OutpostPhase as Phase, type OutpostPhaseStep } from '@fh/engine';
 import { Character, gameManager } from '@fh/ghs-core';
 import { useState } from 'react';
 import { Link } from 'wouter';
@@ -74,23 +74,27 @@ export function OutpostPhasePanel() {
 }
 
 function PassageOfTime({ phase }: { phase: Phase }) {
-  const { send } = useCampaign();
+  const { state, send } = useCampaign();
   const weeks = gameManager.game.party.weeks;
   const advanced = weeks > phase.startWeek;
   const nextWeek = weeks + 1;
   const sections = gameManager.game.party.weekSections[nextWeek] ?? [];
+  // Secretariat passes a week when a scenario ends (automaticPassTime); don't pass it twice.
+  const automatic = state!.ext.rules?.automaticPassTime ?? RULE_DEFAULTS.automaticPassTime;
   return (
     <div className="grid gap-2">
       <p>
-        Week {weeks} ({season(weeks)}). Mark the next week on the calendar
-        {sections.length ? `; week ${nextWeek} has section${sections.length === 1 ? '' : 's'} ${sections.join(', ')} to read` : ''}.
+        Week {weeks} ({season(weeks)}).{' '}
+        {automatic
+          ? 'Time passed automatically when the scenario ended, including the garden. Only pass a week here if no scenario was played (e.g. the group skipped one).'
+          : `Mark the next week on the calendar${sections.length ? `; week ${nextWeek} has section${sections.length === 1 ? '' : 's'} ${sections.join(', ')} to read` : ''}.`}
       </p>
       {advanced ? (
         <p className="text-moss-400">Advanced to week {weeks}.</p>
       ) : (
         <div>
-          <button className="btn btn-primary" onClick={() => send('party.setWeek', { value: nextWeek }).catch(() => {})}>
-            Advance to week {nextWeek}
+          <button className={`btn ${automatic ? '' : 'btn-primary'}`} onClick={() => send('party.passWeek').catch(() => {})}>
+            Pass a week (to week {nextWeek})
           </button>
         </div>
       )}

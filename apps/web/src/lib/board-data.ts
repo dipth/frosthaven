@@ -7,6 +7,7 @@ export interface ImageIndex {
   icons: Record<string, string>;
   abilityCards: Record<string, Record<string, string>>;
   conditions: Record<string, string>;
+  pets: Record<string, string>;
 }
 
 const cache = new Map<string, Promise<unknown>>();

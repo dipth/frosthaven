@@ -2,6 +2,7 @@ import { buildingStep, carpenterDiscount } from '@fh/engine';
 import { gameManager } from '@fh/ghs-core';
 import { useState } from 'react';
 import { PaymentDialog } from '../../components/PaymentDialog';
+import { GardenPanel, StablesPanel } from './GardenStables';
 import { OutpostPhasePanel } from './OutpostPhase';
 import { AddInput, Chip, Panel } from '../../components/ui';
 import { useCampaign } from '../../lib/campaign-store';
@@ -89,6 +90,8 @@ export function OutpostTab() {
         {paying && <BuildingPayment name={paying} onClose={() => setPaying(undefined)} />}
       </Panel>
 
+      <GardenPanel />
+      <StablesPanel />
       <Panel title={`Unlocked items (${items.length})`}>
         <ul className="grid max-h-[28rem] gap-1 overflow-y-auto text-sm">
           {items.map(({ identifier, item }) => {

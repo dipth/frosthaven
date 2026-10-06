@@ -24,3 +24,4 @@ export { availableAbilityCards, handSize } from './commands/hands';
 export { boardKey } from './commands/board';
 export * from './hex';
 export * from './checklist';
+export { gardenSlots } from './commands/garden-pets';
