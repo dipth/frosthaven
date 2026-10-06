@@ -1,6 +1,6 @@
 /** Online mode: a player's ability cards for their character(s). */
 import { availableAbilityCards, characterKey, handSize, HIDDEN_CARD, type HandState } from '@fh/engine';
-import { Character, gameManager, GameState } from '@fh/ghs-core';
+import { Character, gameManager, GameState, labelText } from '@fh/ghs-core';
 import type { AbilityCard } from '@fh/ghs-core/vendor/game/model/data/AbilityCard';
 import { useState } from 'react';
 import { Panel } from '../../../components/ui';
@@ -96,7 +96,39 @@ function HandPanel({ character }: { character: Character }) {
       )}
       {h.longRest && h.revealed && <LongRest character={character} hand={h} images={images} />}
       <Piles character={character} hand={h} images={images} />
+      <BattleGoals character={character} />
     </Panel>
+  );
+}
+
+/** Private battle goals: deal three, keep one (FH). Hidden from other players. */
+function BattleGoals({ character }: { character: Character }) {
+  const { send } = useCampaign();
+  const ref = { edition: character.edition, name: character.name };
+  const goals = character.battleGoals.map((id) => gameManager.battleGoalManager.getBattleGoal(id)).filter((g) => !!g);
+  const text = (cardId: string) => `${labelText(`data.battleGoals.${cardId}`)}: ${labelText(`data.battleGoals.${cardId}.text`)}`;
+  return (
+    <div className="mt-3 border-t border-ink-700 pt-2 text-sm">
+      <div className="label mb-1">Battle goal</div>
+      {goals.length === 0 ? (
+        <button className="btn px-2 py-1 text-xs" onClick={() => send('battleGoals.deal', ref).catch(() => {})}>
+          Deal battle goals
+        </button>
+      ) : character.battleGoal ? (
+        <p>{text(goals[0]!.cardId)}</p>
+      ) : (
+        <ul className="grid gap-1">
+          {goals.map((g, index) => (
+            <li key={g.cardId} className="flex items-start gap-2">
+              <span className="flex-1">{text(g.cardId)}</span>
+              <button className="btn px-2 py-0.5 text-xs" onClick={() => send('battleGoals.choose', { ...ref, index }).catch(() => {})}>
+                Keep
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
   );
 }
 

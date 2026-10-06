@@ -3,6 +3,7 @@ import { Character, gameManager, GameState, labelText, Monster } from '@fh/ghs-c
 import { useMemo, useState } from 'react';
 import { AddInput, Panel } from '../../components/ui';
 import { useCampaign } from '../../lib/campaign-store';
+import { AttackHelper } from './scenario/AttackHelper';
 import { Board } from './scenario/Board';
 import { AmDeck, ElementBoard, LootDeck } from './scenario/Decks';
 import { EntityMenu } from './scenario/EntityMenu';
@@ -74,6 +75,7 @@ export function ScenarioTab() {
           <AmDeck deck="monster" attackModifierDeck={game.monsterAttackModifierDeck} title="Monster modifiers" />
           {hasAllies && <AmDeck deck="ally" attackModifierDeck={game.allyAttackModifierDeck} title="Ally modifiers" />}
           <LootDeck />
+          <AttackHelper />
           <Tools />
         </aside>
       </div>

@@ -260,7 +260,8 @@ const commands: CommandDef[] = [
   defineCommand({
     type: 'entity.changeHealth',
     payload: z.object({ targets, delta: z.number().int().min(-99).max(99) }),
-    authorize: (state, p, ctx) => assertControl(state, p.targets, ctx),
+    // Anyone may deal damage (monsters attack characters); healing is the owner's.
+    authorize: (state, p, ctx) => p.delta < 0 || assertControl(state, p.targets, ctx),
     run(rt, { targets: refs, delta }) {
       if (delta === 0) return;
       const resolved = refs.map((ref) => resolveEntity(rt, ref));
@@ -314,7 +315,7 @@ const commands: CommandDef[] = [
   defineCommand({
     type: 'entity.addCondition',
     payload: z.object({ targets, condition: z.string(), value: z.number().int().min(1).max(20).default(1), permanent: z.boolean().default(false) }),
-    authorize: (state, p, ctx) => assertControl(state, p.targets, ctx),
+    // Attacks inflict conditions on other players' figures too.
     run(rt, { targets: refs, condition: name, value, permanent }) {
       if (!Object.values(ConditionName).includes(name as ConditionName)) {
         throw new CommandError(`Unknown condition ${name}`, 'invalid_payload');
