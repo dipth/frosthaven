@@ -3,13 +3,14 @@
  * calibration from packages/data; overlays, tokens and spawn points come from
  * the fhtts scenario layouts. Figures are dragged freely between hexes.
  */
-import { boardKey, hexCorners, hexKey, hexToPixel, pixelToHex, type BoardFile, type BoardItem, type EntityRef, type Hex } from '@fh/engine';
+import { boardKey, hexCorners, hexKey, hexToPixel, pixelToHex, type BoardFile, type BoardItem, type EntityRef, type Hex, type TileOverride } from '@fh/engine';
 import { Character, gameManager, labelText, Monster } from '@fh/ghs-core';
 import type { Entity } from '@fh/ghs-core/vendor/game/model/Entity';
 import type { Figure } from '@fh/ghs-core/vendor/game/model/Figure';
 import { ObjectiveContainer } from '@fh/ghs-core/vendor/game/model/ObjectiveContainer';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { assetUrl, slug, useBoard, useImages, type ImageIndex } from '../../../lib/board-data';
+import { assetUrl, slug, useBoard, useImages, useTileOverrides, type ImageIndex } from '../../../lib/board-data';
+import { useMe } from '../../../lib/me';
 import { useCampaign } from '../../../lib/campaign-store';
 import { entityRef, maxHealth } from './helpers';
 
@@ -100,11 +101,16 @@ function visibleMaps(board: BoardFile) {
     .filter(({ map }) => map.type === 'scenario' || (map.type.startsWith('section') && sections.has(map.name)));
 }
 
-function tileTransform(tile: BoardFile['tiles'][number]) {
+function tileTransform(tile: BoardFile['tiles'][number], override?: TileOverride) {
   const im = tile.image!;
   const k = SIZE / im.spacing;
   const p = hexToPixel(tile.origin, SIZE);
-  return `translate(${p.x} ${p.y}) rotate(${-(im.rotation + tile.orientation)}) scale(${k}) translate(${-im.origin.x} ${-im.origin.y})`;
+  const base = `translate(${p.x} ${p.y}) rotate(${-(im.rotation + tile.orientation)}) scale(${k}) translate(${-im.origin.x} ${-im.origin.y})`;
+  if (!override) return base;
+  // Corrections in the image's own pixels: about the image centre.
+  const cx = im.width / 2;
+  const cy = im.height / 2;
+  return `${base} translate(${cx + (override.dx ?? 0)} ${cy + (override.dy ?? 0)}) rotate(${override.rotate180 ? 180 : 0}) scale(${override.scale ?? 1}) translate(${-cx} ${-cy})`;
 }
 
 function tileBounds(tile: BoardFile['tiles'][number]) {
@@ -135,6 +141,10 @@ export function Board({ onMenu }: { onMenu(refs: EntityRef[]): void }) {
   const scenario = gameManager.game.scenario;
   const board = useBoard(scenario && scenario.edition === 'fh' && !scenario.custom ? scenario.index : undefined);
   const images = useImages();
+  const me = useMe();
+  const { overrides, save: saveOverride } = useTileOverrides();
+  const [editTiles, setEditTiles] = useState(false);
+  const [selectedTile, setSelectedTile] = useState<string>();
   const svgRef = useRef<SVGSVGElement>(null);
   const [view, setView] = useState({ x: 0, y: 0, k: 0.5 });
   const [drag, setDrag] = useState<{ piece: Piece; at: { x: number; y: number }; moved: boolean; start: { x: number; y: number } }>();
@@ -327,7 +337,11 @@ export function Board({ onMenu }: { onMenu(refs: EntityRef[]): void }) {
                 href={assetUrl(tile.image!.path)}
                 width={tile.image!.width}
                 height={tile.image!.height}
-                transform={tileTransform(tile)}
+                transform={tileTransform(tile, overrides[tile.name])}
+                opacity={editTiles && selectedTile && selectedTile !== tile.name ? 0.45 : 1}
+                className={editTiles ? 'cursor-pointer' : ''}
+                onPointerDown={editTiles ? (e) => e.stopPropagation() : undefined}
+                onClick={editTiles ? () => setSelectedTile(tile.name) : undefined}
               />
             ))}
             {items.map(({ id, item }) => (
@@ -351,6 +365,17 @@ export function Board({ onMenu }: { onMenu(refs: EntityRef[]): void }) {
           </g>
         </svg>
         <div className="absolute right-2 top-2 flex gap-1">
+          {me.role === 'admin' && (
+            <button
+              className={`btn px-2 py-1 text-xs ${editTiles ? 'border-ice-400' : ''}`}
+              onClick={() => {
+                setEditTiles(!editTiles);
+                setSelectedTile(undefined);
+              }}
+            >
+              {editTiles ? 'Done editing' : 'Edit tiles'}
+            </button>
+          )}
           <button className="btn px-2 py-1 text-xs" onClick={() => setView((v) => ({ ...v, k: Math.min(3, v.k * 1.25) }))}>
             +
           </button>
@@ -359,6 +384,13 @@ export function Board({ onMenu }: { onMenu(refs: EntityRef[]): void }) {
           </button>
         </div>
       </div>
+      {editTiles && (
+        <TileEditor
+          name={selectedTile}
+          override={selectedTile ? overrides[selectedTile] : undefined}
+          onChange={(o) => selectedTile && saveOverride(selectedTile, o).catch(() => {})}
+        />
+      )}
       {unnumbered > 0 && (
         <div className="panel flex flex-wrap items-center gap-2 px-3 py-2 text-sm">
           <span className="text-frost-400">
@@ -516,5 +548,45 @@ function PieceView({ piece, at, ghost, onPointerDown }: { piece: Piece; at: { x:
       <rect x={-r} y={r + 4} width={2 * r} height={8} rx={4} fill="#1e293b" />
       <rect x={-r} y={r + 4} width={(2 * r * Math.max(0, hp)) / Math.max(1, max)} height={8} rx={4} fill={hp / max > 0.5 ? '#4ade80' : hp / max > 0.25 ? '#facc15' : '#f87171'} />
     </g>
+  );
+}
+
+/** Admin: correct a tile image that is placed wrongly (shared by every scenario and campaign). */
+function TileEditor({ name, override, onChange }: { name?: string; override?: TileOverride; onChange(o: TileOverride | null): void }) {
+  if (!name) return <div className="panel px-3 py-2 text-sm text-frost-400">Click a tile to correct its image. Corrections apply to every scenario.</div>;
+  const o = override ?? {};
+  const set = (change: Partial<TileOverride>) => onChange({ ...o, ...change });
+  const nudge = (dx: number, dy: number) => set({ dx: (o.dx ?? 0) + dx, dy: (o.dy ?? 0) + dy });
+  return (
+    <div className="panel flex flex-wrap items-center gap-2 px-3 py-2 text-sm">
+      <span className="font-medium">Tile {name}</span>
+      <button className="btn px-2 py-1 text-xs" onClick={() => set({ rotate180: !o.rotate180 })}>
+        Turn art 180°
+      </button>
+      <span className="text-xs text-frost-400">Nudge</span>
+      {(
+        [
+          ['←', -2, 0],
+          ['→', 2, 0],
+          ['↑', 0, -2],
+          ['↓', 0, 2]
+        ] as const
+      ).map(([label, dx, dy]) => (
+        <button key={label} className="btn px-2 py-1 text-xs" onClick={() => nudge(dx, dy)}>
+          {label}
+        </button>
+      ))}
+      <span className="text-xs text-frost-400">Size</span>
+      <button className="btn px-2 py-1 text-xs" onClick={() => set({ scale: Math.round(((o.scale ?? 1) - 0.01) * 100) / 100 })}>
+        −
+      </button>
+      <span className="w-10 text-center font-mono text-xs">{Math.round((o.scale ?? 1) * 100)}%</span>
+      <button className="btn px-2 py-1 text-xs" onClick={() => set({ scale: Math.round(((o.scale ?? 1) + 0.01) * 100) / 100 })}>
+        +
+      </button>
+      <button className="btn ml-auto px-2 py-1 text-xs" disabled={!override} onClick={() => onChange(null)}>
+        Reset
+      </button>
+    </div>
   );
 }

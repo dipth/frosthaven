@@ -37,7 +37,7 @@ function nextMessage(ws: WebSocket | import('ws').WebSocket, predicate: (m: Serv
 beforeAll(async () => {
   await runMigrations(url);
   await bootstrapGhsNode();
-  ({ app, auth } = await buildApp({ db, logger: false, sessionSecret: 'test-secret-test-secret-test-secret', webDistDir: '/nonexistent' }));
+  ({ app, auth } = await buildApp({ db, logger: false, sessionSecret: 'test-secret-test-secret-test-secret', webDistDir: '/nonexistent', loginLimit: 1000 }));
   await app.ready();
 });
 
@@ -47,7 +47,7 @@ afterAll(async () => {
 });
 
 beforeEach(async () => {
-  await db.execute(sql`TRUNCATE users, invites, auth_sessions, campaigns, play_sessions, events, imports CASCADE`);
+  await db.execute(sql`TRUNCATE users, invites, auth_sessions, campaigns, play_sessions, events, imports, tile_overrides CASCADE`);
 });
 
 describe('privacy', () => {
@@ -206,4 +206,14 @@ it('backs up changed campaigns as GHS dumps for admins', async () => {
   expect(files.map((f) => f.file.split('.').slice(-2).join('.')).sort()).toEqual(['app.json', 'ghs.json']);
   const player = await signIn('eve');
   expect((await app.inject({ url: '/api/admin/backups', headers: { cookie: player } })).statusCode).toBe(403);
+});
+
+it('stores tile corrections that only admins may change', async () => {
+  const admin = await signIn('fay', 'admin');
+  const player = await signIn('gus');
+  expect((await app.inject({ method: 'PUT', url: '/api/admin/tile-overrides/13-A', headers: { cookie: player }, payload: { rotate180: true } })).statusCode).toBe(403);
+  expect((await app.inject({ method: 'PUT', url: '/api/admin/tile-overrides/13-A', headers: { cookie: admin }, payload: { rotate180: true, dx: 4 } })).statusCode).toBe(200);
+  expect((await app.inject({ url: '/api/tile-overrides', headers: { cookie: player } })).json()).toEqual({ '13-A': { rotate180: true, dx: 4 } });
+  await app.inject({ method: 'DELETE', url: '/api/admin/tile-overrides/13-A', headers: { cookie: admin } });
+  expect((await app.inject({ url: '/api/tile-overrides', headers: { cookie: player } })).json()).toEqual({});
 });

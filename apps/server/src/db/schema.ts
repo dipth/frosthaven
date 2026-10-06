@@ -1,6 +1,6 @@
 import { sql } from 'drizzle-orm';
 import { bigserial, index, integer, jsonb, pgEnum, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
-import type { CampaignState, CommandLog, SessionMode } from '@fh/engine';
+import type { CampaignState, CommandLog, SessionMode, TileOverride } from '@fh/engine';
 
 export const roleEnum = pgEnum('role', ['admin', 'player']);
 export const sessionModeEnum = pgEnum('session_mode', ['physical', 'online']);
@@ -100,6 +100,14 @@ export const imports = pgTable('imports', {
   raw: jsonb('raw').notNull(),
   createdBy: uuid('created_by').references(() => users.id, { onDelete: 'set null' }),
   createdAt: createdAt()
+});
+
+/** Global corrections to board tile images (see TileOverride), keyed by tile name, e.g. "13-A". */
+export const tileOverrides = pgTable('tile_overrides', {
+  name: text('name').primaryKey(),
+  override: jsonb('override').$type<TileOverride>().notNull(),
+  updatedBy: uuid('updated_by').references(() => users.id, { onDelete: 'set null' }),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow()
 });
 
 export type User = typeof users.$inferSelect;

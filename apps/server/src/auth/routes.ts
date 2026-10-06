@@ -24,7 +24,7 @@ function setSessionCookie(reply: FastifyReply, token: string) {
   });
 }
 
-export async function authRoutes(app: FastifyInstance, { auth }: { auth: AuthService }) {
+export async function authRoutes(app: FastifyInstance, { auth, loginLimit = 10 }: { auth: AuthService; loginLimit?: number }) {
   app.get('/login', { config: { public: true } }, async (req, reply) => {
     if (req.user) {
       return reply.redirect('/');
@@ -40,7 +40,7 @@ export async function authRoutes(app: FastifyInstance, { auth }: { auth: AuthSer
 
   app.post(
     '/api/auth/login',
-    { config: { public: true, rateLimit: { max: 10, timeWindow: '5 minutes' } } },
+    { config: { public: true, rateLimit: { max: loginLimit, timeWindow: '5 minutes' } } },
     async (req, reply) => {
       const parsed = credentials.safeParse(req.body);
       if (!parsed.success) {
@@ -57,7 +57,7 @@ export async function authRoutes(app: FastifyInstance, { auth }: { auth: AuthSer
 
   app.post(
     '/api/invites/:token/accept',
-    { config: { public: true, rateLimit: { max: 10, timeWindow: '5 minutes' } } },
+    { config: { public: true, rateLimit: { max: loginLimit, timeWindow: '5 minutes' } } },
     async (req, reply) => {
       const { token } = z.object({ token: z.string().max(100) }).parse(req.params);
       const parsed = newAccount.safeParse(req.body);

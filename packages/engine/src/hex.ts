@@ -93,3 +93,16 @@ export function hexCorners(h: Hex, size: number, scale = 1): string {
 }
 
 export const hexKey = (h: Hex) => `${h.x},${h.y}`;
+
+/**
+ * Manual correction of a tile image's placement (Admin edit mode on the
+ * board), applied in the image's own pixels before the calibrated placement.
+ */
+export interface TileOverride {
+  /** Turn the art upside down about the image centre (fits rectangular tiles both ways). */
+  rotate180?: boolean;
+  dx?: number;
+  dy?: number;
+  /** Size factor, 1 = calibrated. */
+  scale?: number;
+}

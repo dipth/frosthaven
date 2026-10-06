@@ -10,6 +10,7 @@ import { join } from 'node:path';
 import { ZodError } from 'zod';
 import { authRoutes, SESSION_COOKIE } from './auth/routes';
 import { backupRoutes } from './backups';
+import { tileRoutes } from './tiles';
 import { AuthService } from './auth/service';
 import { CampaignHub } from './campaigns/hub';
 import { campaignRoutes } from './campaigns/routes';
@@ -38,6 +39,8 @@ export interface AppOptions {
   assetsDir?: string;
   generatedDir?: string;
   backupDir?: string;
+  /** Login attempts per 5 minutes per client (default 10). */
+  loginLimit?: number;
 }
 
 export async function buildApp(options: AppOptions) {
@@ -98,9 +101,10 @@ export async function buildApp(options: AppOptions) {
   app.get('/robots.txt', { config: { public: true } }, async (_req, reply) => reply.type('text/plain').send('User-agent: *\nDisallow: /\n'));
   app.get('/healthz', { config: { public: true } }, async () => ({ ok: true }));
 
-  await app.register(authRoutes, { auth });
+  await app.register(authRoutes, { auth, ...(options.loginLimit ? { loginLimit: options.loginLimit } : {}) });
   await app.register(campaignRoutes, { db: options.db, hub });
   await app.register(backupRoutes, { db: options.db, dir: options.backupDir ?? env.backupDir });
+  await app.register(tileRoutes, { db: options.db });
 
   // Game data and images, signed-in users only.
   const generatedDir = options.generatedDir ?? env.generatedDir;

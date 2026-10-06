@@ -1,4 +1,4 @@
-import type { BoardFile } from '@fh/engine';
+import type { BoardFile, TileOverride } from '@fh/engine';
 import { useEffect, useState } from 'react';
 import { api } from './api';
 
@@ -53,3 +53,23 @@ export function useImages() {
 
 export const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, '');
 export const assetUrl = (path: string) => `/assets/worldhaven/${path}`;
+
+/** Admin corrections to tile images (rotate/nudge/scale), shared by all campaigns. */
+export function useTileOverrides() {
+  const [overrides, setOverrides] = useState<Record<string, TileOverride>>({});
+  const reload = () => api<Record<string, TileOverride>>('/api/tile-overrides').then(setOverrides, () => {});
+  useEffect(() => {
+    reload();
+  }, []);
+  const save = async (name: string, override: TileOverride | null) => {
+    setOverrides((current) => {
+      const next = { ...current };
+      if (override) next[name] = override;
+      else delete next[name];
+      return next;
+    });
+    if (override) await api(`/api/admin/tile-overrides/${name}`, { method: 'PUT', json: override });
+    else await api(`/api/admin/tile-overrides/${name}`, { method: 'DELETE' });
+  };
+  return { overrides, save };
+}
