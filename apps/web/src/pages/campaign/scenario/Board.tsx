@@ -8,7 +8,7 @@ import { Character, gameManager, labelText, Monster } from '@fh/ghs-core';
 import type { Entity } from '@fh/ghs-core/vendor/game/model/Entity';
 import type { Figure } from '@fh/ghs-core/vendor/game/model/Figure';
 import { ObjectiveContainer } from '@fh/ghs-core/vendor/game/model/ObjectiveContainer';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { assetUrl, slug, useBoard, useImages, useTileOverrides, type ImageIndex } from '../../../lib/board-data';
 import { useMe } from '../../../lib/me';
 import { useCampaign } from '../../../lib/campaign-store';
@@ -645,7 +645,11 @@ function overlayInfo(item: Overlay, removed: boolean): { kind: string; text: str
   return { kind: item.type || 'Overlay', text: 'See the scenario book for how this tile works.' };
 }
 
-/** Shared look for every tooltip on the map, anchored above a world point. */
+/**
+ * Shared look for every tooltip on the map: above the element (world
+ * coordinates), or below it when it would be clipped at the top of the map,
+ * and kept inside the map horizontally.
+ */
 function MapTip({
   at,
   view,
@@ -654,15 +658,33 @@ function MapTip({
   color,
   children
 }: {
-  at: { x: number; y: number };
+  at: { x: number; top: number; bottom: number };
   view: { x: number; y: number; k: number };
   title: string;
   kind: string;
   color: string;
   children?: React.ReactNode;
 }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [fit, setFit] = useState({ below: false, dx: 0 });
+  const x = view.x + view.k * at.x;
+  const top = view.y + view.k * at.top;
+  const bottom = view.y + view.k * at.bottom;
+  useLayoutEffect(() => {
+    const el = ref.current;
+    const map = el?.offsetParent as HTMLElement | null;
+    if (!el || !map) return;
+    const below = top - el.offsetHeight < 0;
+    const half = el.offsetWidth / 2;
+    const dx = Math.max(half - x, Math.min(0, map.clientWidth - half - x));
+    if (below !== fit.below || dx !== fit.dx) setFit({ below, dx });
+  });
   return (
-    <div className="pointer-events-none absolute z-10 w-60 -translate-x-1/2 -translate-y-full pb-2" style={{ left: view.x + view.k * at.x, top: view.y + view.k * at.y }}>
+    <div
+      ref={ref}
+      className={`pointer-events-none absolute z-10 w-60 -translate-x-1/2 ${fit.below ? 'pt-2' : '-translate-y-full pb-2'}`}
+      style={{ left: x + fit.dx, top: fit.below ? bottom : top }}
+    >
       <div className="rounded-lg border border-ink-600 bg-ink-900/95 px-3 py-2 text-sm shadow-lg">
         <div className="font-medium text-frost-100">{title}</div>
         <div className="mb-1 flex items-center gap-1.5 text-xs text-frost-400">
@@ -701,7 +723,7 @@ function BoardTip({
     const hp = piece.entity.health;
     const max = maxHealth(piece.entity);
     return (
-      <MapTip at={{ x: c.x, y: c.y - R }} view={view} title={`${piece.label}${piece.number ? ` ${piece.number}` : ''}`} kind={pieceKind(piece)} color={piece.ring}>
+      <MapTip at={{ x: c.x, top: c.y - R, bottom: c.y + R }} view={view} title={`${piece.label}${piece.number ? ` ${piece.number}` : ''}`} kind={pieceKind(piece)} color={piece.ring}>
         <span>
           {hp}/{max} HP{piece.active ? ' · taking its turn' : ''}
         </span>
@@ -714,7 +736,7 @@ function BoardTip({
     const c = hexToPixel(item.hex, SIZE);
     const loot = item.name === 'loot';
     return (
-      <MapTip at={{ x: c.x, y: c.y - R * 0.5 }} view={view} title={loot ? 'Loot' : item.name === 'goal' ? 'Goal' : `Token ${item.name.toUpperCase()}`} kind={loot ? 'Loot token' : 'Scenario token'} color="#fef3c7">
+      <MapTip at={{ x: c.x, top: c.y - R * 0.5, bottom: c.y + R * 0.5 }} view={view} title={loot ? 'Loot' : item.name === 'goal' ? 'Goal' : `Token ${item.name.toUpperCase()}`} kind={loot ? 'Loot token' : 'Scenario token'} color="#fef3c7">
         {loot ? 'A character picks it up by ending a move here or with a loot ability. Click to remove it.' : "See the scenario's special rules. Click to remove it."}
       </MapTip>
     );
@@ -725,7 +747,7 @@ function BoardTip({
   const door = /door/i.test(item.name + item.type);
   return (
     <MapTip
-      at={{ x: points.reduce((sum, p) => sum + p.x, 0) / points.length, y: Math.min(...points.map((p) => p.y)) - R }}
+      at={{ x: points.reduce((sum, p) => sum + p.x, 0) / points.length, top: Math.min(...points.map((p) => p.y)) - R, bottom: Math.max(...points.map((p) => p.y)) + R }}
       view={view}
       title={item.name}
       kind={kind}
