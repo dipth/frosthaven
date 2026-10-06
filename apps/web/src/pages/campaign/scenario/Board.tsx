@@ -183,7 +183,8 @@ export function Board({ onMenu }: { onMenu(refs: EntityRef[]): void }) {
   const unnumbered = gameManager.game.figures
     .filter((f): f is Monster => f instanceof Monster)
     .reduce((n, m) => n + m.entities.filter((e) => !e.dead && e.health > 0 && e.number < 0).length, 0);
-  const [autoPlace, setAutoPlace] = useState(false);
+  /** Section whose monsters to put on the map once they have standee numbers. */
+  const [autoPlace, setAutoPlace] = useState<string | false>(false);
   const numbering = useRef(false);
   const placed = all.filter((p) => positions[p.key]);
   const tokens = boardState?.characterTokens ?? [];
@@ -339,8 +340,15 @@ export function Board({ onMenu }: { onMenu(refs: EntityRef[]): void }) {
     };
   }, [board]);
 
-  const placeOnSpawns = () => {
+  /** Put unplaced figures on start and spawn hexes: only `section`'s spawns, or the most recently revealed map's first. */
+  const placeOnSpawns = (section?: string) => {
     if (!board) return;
+    // Spawn points of rooms that are already open would be free again once their monsters die.
+    const revealed = gameManager.game.sections.map((s) => s.index);
+    const rank = (map: BoardFile['maps'][number]) => (map.type === 'scenario' ? -1 : revealed.indexOf(map.name));
+    const spawnMaps = maps
+      .filter(({ map }) => !section || (map.type !== 'scenario' && map.name === section))
+      .sort((a, b) => rank(b.map) - rank(a.map));
     const players = gameManager.game.figures.filter((f) => f instanceof Character && !f.absent).length;
     const taken = new Set(Object.values(positions).map(hexKey));
     const placements: { ref: EntityRef; hex: Hex }[] = [];
@@ -357,8 +365,8 @@ export function Board({ onMenu }: { onMenu(refs: EntityRef[]): void }) {
       } else if (piece.ref.kind === 'monster') {
         const ref = piece.ref;
         const type = (piece.entity as { type?: string }).type;
-        const spawns = items
-          .map(({ item }) => item)
+        const spawns = spawnMaps
+          .flatMap(({ map }) => map.items)
           .filter((item): item is Extract<BoardItem, { kind: 'monster' }> => item.kind === 'monster' && item.name === ref.name && spawnType(item.levels, players) === type);
         const exact = spawns.find((s) => s.standee === ref.number && !taken.has(hexKey(s.hex)));
         const spawn = exact ?? spawns.find((s) => !s.standee && !taken.has(hexKey(s.hex))) ?? spawns.find((s) => !taken.has(hexKey(s.hex)));
@@ -381,7 +389,7 @@ export function Board({ onMenu }: { onMenu(refs: EntityRef[]): void }) {
       return;
     }
     setAutoPlace(false);
-    placeOnSpawns();
+    placeOnSpawns(autoPlace);
   }); // eslint-disable-line react-hooks/exhaustive-deps
 
   const clickItem = (id: string, item: BoardItem) => {
@@ -396,7 +404,7 @@ export function Board({ onMenu }: { onMenu(refs: EntityRef[]): void }) {
         if (confirm(`Open the door and reveal section ${section}?`)) {
           send('board.toggleItem', { id, removed: true })
             .then(() => send('scenario.addSection', { index: section }))
-            .then(() => setAutoPlace(true))
+            .then(() => setAutoPlace(section))
             .catch(() => {});
         }
       } else {
@@ -577,7 +585,7 @@ export function Board({ onMenu }: { onMenu(refs: EntityRef[]): void }) {
               {piece.number ? ` ${piece.number}` : ''}
             </button>
           ))}
-          <button className="btn ml-auto px-2 py-1 text-xs" onClick={placeOnSpawns}>
+          <button className="btn ml-auto px-2 py-1 text-xs" onClick={() => placeOnSpawns()}>
             Place on start and spawn hexes
           </button>
         </div>
