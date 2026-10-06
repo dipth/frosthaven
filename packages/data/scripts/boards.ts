@@ -215,6 +215,11 @@ export function buildBoards(outDir: string, calibrationFile: string) {
   for (const a of art.filter((a) => a.image.includes('/icons/'))) {
     icons[slug(String(a.name).replace(/ icon$/, ''))] = a.image;
   }
+  // Element tracker icons: the full-colour variant (not the bw or consume ones that share a name).
+  const elements: Record<string, string> = {};
+  for (const a of art.filter((a) => /\/icons\/elements\/fh-[a-z]+-color-icon\.png$/.test(a.image))) {
+    elements[slug(String(a.name).replace(/ icon$/, ''))] = a.image;
+  }
   const abilityCards: Record<string, Record<string, string>> = {};
   for (const c of wh('character-ability-cards.json')) {
     const character = slug(String(c['character-xws'] ?? ''));
@@ -231,6 +236,6 @@ export function buildBoards(outDir: string, calibrationFile: string) {
     const id = /^(\d+)\s/.exec(String(p.name))?.[1];
     if (id) pets[id] = p.image;
   }
-  writeFileSync(join(outDir, 'images.json'), JSON.stringify({ monsters, icons, abilityCards, conditions, pets }));
+  writeFileSync(join(outDir, 'images.json'), JSON.stringify({ monsters, icons, elements, abilityCards, conditions, pets }));
   console.log(`  images: ${Object.keys(monsters).length} monsters, ${Object.keys(abilityCards).length} card sets`);
 }

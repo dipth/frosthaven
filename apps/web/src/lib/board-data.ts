@@ -5,6 +5,7 @@ import { api } from './api';
 export interface ImageIndex {
   monsters: Record<string, string>;
   icons: Record<string, string>;
+  elements?: Record<string, string>;
   abilityCards: Record<string, Record<string, string>>;
   conditions: Record<string, string>;
   pets: Record<string, string>;

@@ -2,6 +2,7 @@ import { Character, gameManager, GameState, labelText } from '@fh/ghs-core';
 import type { AttackModifierDeck } from '@fh/ghs-core/vendor/game/model/data/AttackModifier';
 import { Element, ElementState } from '@fh/ghs-core/vendor/game/model/data/Element';
 import { useState } from 'react';
+import { assetUrl, useImages } from '../../../lib/board-data';
 import { useCampaign } from '../../../lib/campaign-store';
 import { amText, amTone, lootText } from './helpers';
 
@@ -141,6 +142,7 @@ const ELEMENT_COLOR: Record<string, string> = {
 
 export function ElementBoard() {
   const { send } = useCampaign();
+  const images = useImages();
   return (
     <div className="flex gap-1.5">
       {ELEMENTS.map((type) => {
@@ -148,18 +150,32 @@ export function ElementBoard() {
         const state = element?.state ?? ElementState.inert;
         const strong = state === ElementState.strong || state === ElementState.new;
         const waning = state === ElementState.waning;
+        const icon = images?.elements?.[type];
         return (
           <button
             key={type}
             title={`${labelText('game.element.' + type)}: ${labelText('game.element.state.' + state)} (click to cycle)`}
             onClick={() => send('element.set', { element: type }).catch(() => {})}
-            className="relative grid h-9 w-9 place-items-center overflow-hidden rounded-full border border-ink-500 text-[10px] font-semibold uppercase"
-            style={{
-              background: strong ? ELEMENT_COLOR[type] : waning ? `linear-gradient(to top, ${ELEMENT_COLOR[type]} 50%, transparent 50%)` : 'transparent',
-              color: strong ? '#0b1220' : ELEMENT_COLOR[type]
-            }}
+            className="relative grid h-9 w-9 place-items-center overflow-hidden rounded-full text-[10px] font-semibold uppercase"
+            style={{ boxShadow: strong ? `0 0 8px ${ELEMENT_COLOR[type]}` : undefined }}
           >
-            {type.slice(0, 2)}
+            {icon ? (
+              <>
+                {/* Inert: a faded grey icon. Waning: colour fills the lower half. Strong: full colour. */}
+                <img src={assetUrl(icon)} alt="" className={`absolute inset-0 h-full w-full ${strong ? '' : 'opacity-30 grayscale'}`} />
+                {waning && <img src={assetUrl(icon)} alt="" className="absolute inset-0 h-full w-full" style={{ clipPath: 'inset(50% 0 0 0)' }} />}
+              </>
+            ) : (
+              <span
+                className="grid h-full w-full place-items-center rounded-full border border-ink-500"
+                style={{
+                  background: strong ? ELEMENT_COLOR[type] : waning ? `linear-gradient(to top, ${ELEMENT_COLOR[type]} 50%, transparent 50%)` : 'transparent',
+                  color: strong ? '#0b1220' : ELEMENT_COLOR[type]
+                }}
+              >
+                {type.slice(0, 2)}
+              </span>
+            )}
           </button>
         );
       })}
