@@ -34,3 +34,27 @@ it('tracks figure positions and removed items for the current scenario', () => {
   state = run(state, 'finish.apply', {});
   expect(state.ext.board).toBeUndefined();
 });
+
+it('drops a loot token where a normal or elite monster dies', () => {
+  let state = run(newCampaignState('x'), 'character.add', { edition: 'fh', name: 'drifter' });
+  state = run(state, 'scenario.set', { index: '1' });
+  state = run(state, 'monster.addStandee', { edition: 'fh', name: 'algox-archer', type: 'normal', number: 1 });
+  state = run(state, 'monster.addStandee', { edition: 'fh', name: 'algox-archer', type: 'normal', number: 2, summon: true });
+  const archer = (number: number) => ({ kind: 'monster', edition: 'fh', name: 'algox-archer', number });
+  state = run(state, 'board.place', {
+    placements: [
+      { ref: archer(1), hex: { x: 3, y: 3 } },
+      { ref: archer(2), hex: { x: 4, y: 3 } }
+    ]
+  });
+  state = run(state, 'entity.changeHealth', { targets: [archer(1)], delta: -99 });
+  expect(state.ext.board!.loot).toEqual([{ x: 3, y: 3 }]);
+  expect(state.ext.board!.positions['monster:fh:algox-archer:1']).toBeUndefined();
+  // Summoned monsters drop nothing.
+  state = run(state, 'entity.kill', { targets: [archer(2)] });
+  expect(state.ext.board!.loot).toEqual([{ x: 3, y: 3 }]);
+  expect(state.ext.board!.positions['monster:fh:algox-archer:2']).toBeUndefined();
+  state = run(state, 'board.pickUpLoot', { index: 0 });
+  expect(state.ext.board!.loot).toEqual([]);
+  expect(() => run(state, 'board.pickUpLoot', { index: 0 })).toThrow(/No loot/);
+});

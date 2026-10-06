@@ -6,34 +6,12 @@
  */
 import { Monster } from '@fh/ghs-core';
 import { z } from 'zod';
-import { CommandError, defineCommand, type CommandContext, type CommandDef, type Runtime } from '../runtime';
+import { CommandError, defineCommand, type CommandContext, type CommandDef } from '../runtime';
 import type { CampaignState, Hex } from '../state';
+import { board, boardKey } from './board-state';
 import { assertControl, entityRef, type EntityRef } from './play';
 
 const hex = z.object({ x: z.number().int().min(-200).max(200), y: z.number().int().min(-200).max(200) });
-
-/** Stable key of a figure on the board. */
-export function boardKey(ref: EntityRef): string {
-  switch (ref.kind) {
-    case 'character':
-      return `character:${ref.edition}:${ref.name}`;
-    case 'summon':
-      return `summon:${ref.edition}:${ref.name}:${ref.uuid}`;
-    case 'monster':
-      return `monster:${ref.edition}:${ref.name}:${ref.number}`;
-    case 'objective':
-      return `objective:${ref.uuid}:${ref.number}`;
-  }
-}
-
-function board(rt: Runtime) {
-  const scenario = rt.game.scenario;
-  if (!scenario) throw new CommandError('No scenario is running');
-  if (!rt.ext.board || rt.ext.board.scenario !== scenario.index) {
-    rt.ext.board = { scenario: scenario.index, positions: {}, removed: [] };
-  }
-  return rt.ext.board;
-}
 
 function control(state: CampaignState, refs: EntityRef[], ctx: CommandContext) {
   assertControl(state, refs, ctx);
@@ -94,6 +72,15 @@ const commands: CommandDef[] = [
       const b = board(rt);
       b.removed = b.removed.filter((x) => x !== id);
       if (removed) b.removed.push(id);
+    }
+  }),
+  defineCommand({
+    type: 'board.pickUpLoot',
+    payload: z.object({ index: z.number().int().min(0) }),
+    run(rt, { index }) {
+      const b = board(rt);
+      if (!b.loot?.[index]) throw new CommandError('No loot token there');
+      b.loot.splice(index, 1);
     }
   })
 ];

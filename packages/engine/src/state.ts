@@ -58,6 +58,8 @@ export interface BoardState {
   positions: Record<string, Hex>;
   /** Board items (from the scenario's board data) taken off the map: looted tokens, opened doors... */
   removed: string[];
+  /** Loot tokens dropped by dead monsters. */
+  loot?: Hex[];
 }
 
 export type CardPile = 'hand' | 'discard' | 'lost' | 'active';

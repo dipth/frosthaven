@@ -25,6 +25,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { z } from 'zod';
 import { ruleRooms, ruleSections } from '../ghs-ui/scenario-rules';
 import { ScenarioSummary } from '../ghs-ui/scenario-summary';
+import { monsterDied } from './board-state';
 import { CommandError, defineCommand, type CommandContext, type CommandDef, type Runtime } from '../runtime';
 import { characterKey, type CampaignState } from '../state';
 
@@ -114,6 +115,7 @@ function removeDead(rt: Runtime, targets: { figure: Figure; entity: Entity }[]) 
     const dead = (entity instanceof MonsterEntity || entity instanceof Summon || entity instanceof ObjectiveEntity) && entity.dead;
     if (!dead) continue;
     if (figure instanceof Monster && entity instanceof MonsterEntity) {
+      monsterDied(rt, figure, entity);
       rt.gm.monsterManager.removeMonsterEntity(figure, entity);
     } else if (figure instanceof Character && entity instanceof Summon) {
       rt.gm.characterManager.removeSummon(figure, entity);

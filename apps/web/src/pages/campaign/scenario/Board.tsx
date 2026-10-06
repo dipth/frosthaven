@@ -175,7 +175,11 @@ export function Board({ onMenu }: { onMenu(refs: EntityRef[]): void }) {
     const names = new Set(maps.flatMap(({ map }) => map.tiles));
     return board.tiles.filter((t) => names.has(t.name) && t.image);
   }, [board, maps]);
-  const items = maps.flatMap(({ map, index }) => map.items.map((item, i) => ({ id: `${index}:${i}`, item })));
+  const items = [
+    ...maps.flatMap(({ map, index }) => map.items.map((item, i) => ({ id: `${index}:${i}`, item }))),
+    // Loot dropped by dead monsters.
+    ...(boardState?.loot ?? []).map((hex, i) => ({ id: `loot:${i}`, item: { kind: 'token', name: 'loot', hex } as BoardItem }))
+  ];
 
   // Fit the view to the visible tiles when the layout changes.
   const fitKey = tiles.map((t) => t.name).join();
@@ -321,6 +325,10 @@ export function Board({ onMenu }: { onMenu(refs: EntityRef[]): void }) {
   }); // eslint-disable-line react-hooks/exhaustive-deps
 
   const clickItem = (id: string, item: BoardItem) => {
+    if (id.startsWith('loot:')) {
+      send('board.pickUpLoot', { index: Number(id.slice(5)) }).catch(() => {});
+      return;
+    }
     if (item.kind === 'overlay' && /door/i.test(item.name + item.type)) {
       const section = item.trigger?.action === 'reveal' && item.trigger.what?.name;
       const isRemoved = removed.has(id);

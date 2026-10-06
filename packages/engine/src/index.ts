@@ -21,7 +21,7 @@ export * from './ghs-ui/brew';
 export * from './ghs-ui/enhancements';
 export * from './narration';
 export { availableAbilityCards, cardSlots, handSize } from './commands/hands';
-export { boardKey } from './commands/board';
+export { boardKey } from './commands/board-state';
 export * from './hex';
 export * from './checklist';
 export { gardenSlots } from './commands/garden-pets';
