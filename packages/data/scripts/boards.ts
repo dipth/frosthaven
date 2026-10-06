@@ -105,7 +105,10 @@ const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, '');
 export function buildBoards(outDir: string, calibrationFile: string) {
   const scenarios = JSON.parse(readFileSync(join(outDir, 'fhtts/processedScenarios.human.json'), 'utf8')) as Record<string, FhttsScenario>;
   const calibration = JSON.parse(readFileSync(calibrationFile, 'utf8')) as Record<string, Calibration>;
-  const fh = JSON.parse(readFileSync(join(outDir, 'ghs/fh.json'), 'utf8')) as { monsters: { name: string }[] };
+  const fh = JSON.parse(readFileSync(join(outDir, 'ghs/fh.json'), 'utf8')) as {
+    monsters: { name: string }[];
+    decks: { name: string; abilities: { cardId?: number; name?: string }[] }[];
+  };
   const ghsMonsters = new Set(fh.monsters.map((m) => m.name));
   const tileInfos = JSON.parse(readFileSync(join(outDir, 'fhtts/tileInfos.json'), 'utf8')) as Record<string, { angle?: number }>;
   const wh = (file: string) => JSON.parse(readFileSync(join(outDir, 'worldhaven', file), 'utf8')) as Worldhaven;
@@ -227,6 +230,25 @@ export function buildBoards(outDir: string, calibrationFile: string) {
     const prefix = c.expansion === 'frosthaven' ? 'fh' : c.expansion === 'gloomhaven' ? 'gh' : c.expansion === 'jaws of the lion' ? 'jotl' : 'fc';
     (abilityCards[`${prefix}:${character}`] ??= {})[slug(c.name)] = c.image;
   }
+  // Monster ability card art per GHS deck, keyed by GHS cardId. The cardId is the
+  // card's asset number, but GHS misnumbers a few cards and scenario decks reuse
+  // other decks' cards, so fall back to the card name within the deck and then to
+  // the asset number anywhere with a matching name.
+  const monsterCards = wh('monster-ability-cards.json').filter(
+    (c) => c.expansion === 'frosthaven' && /^\d+$/.test(String(c['assetno'])) && !/^\d+$/.test(c.name) && !/^fh-ma-/.test(c.name)
+  );
+  const cardDeck = (c: Worldhaven[number]) => c.image.split('/')[2];
+  const monsterAbilityCards: Record<string, Record<string, string>> = {};
+  for (const deck of fh.decks) {
+    for (const ability of deck.abilities) {
+      const name = slug(ability.name ?? '');
+      const card =
+        monsterCards.find((c) => cardDeck(c) === deck.name && Number(c['assetno']) === ability.cardId) ??
+        monsterCards.find((c) => cardDeck(c) === deck.name && slug(c.name) === name) ??
+        monsterCards.find((c) => Number(c['assetno']) === ability.cardId && slug(c.name) === name);
+      if (card && ability.cardId !== undefined) (monsterAbilityCards[`fh:${deck.name}`] ??= {})[ability.cardId] = card.image;
+    }
+  }
   const conditions: Record<string, string> = {};
   for (const t of wh('tokens.json').filter((t) => t.expansion === 'frosthaven' && t.image.includes('/conditions/'))) {
     conditions[slug(t.name)] = t.image;
@@ -236,6 +258,6 @@ export function buildBoards(outDir: string, calibrationFile: string) {
     const id = /^(\d+)\s/.exec(String(p.name))?.[1];
     if (id) pets[id] = p.image;
   }
-  writeFileSync(join(outDir, 'images.json'), JSON.stringify({ monsters, icons, elements, abilityCards, conditions, pets }));
+  writeFileSync(join(outDir, 'images.json'), JSON.stringify({ monsters, icons, elements, abilityCards, monsterAbilityCards, conditions, pets }));
   console.log(`  images: ${Object.keys(monsters).length} monsters, ${Object.keys(abilityCards).length} card sets`);
 }

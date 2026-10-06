@@ -7,6 +7,8 @@ export interface ImageIndex {
   icons: Record<string, string>;
   elements?: Record<string, string>;
   abilityCards: Record<string, Record<string, string>>;
+  /** Monster ability card art by `edition:deck`, then GHS cardId. */
+  monsterAbilityCards?: Record<string, Record<string, string>>;
   conditions: Record<string, string>;
   pets: Record<string, string>;
 }

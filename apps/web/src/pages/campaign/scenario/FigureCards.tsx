@@ -5,7 +5,9 @@ import { EntityValueFunction, type Entity } from '@fh/ghs-core/vendor/game/model
 import type { Figure } from '@fh/ghs-core/vendor/game/model/Figure';
 import { ObjectiveContainer } from '@fh/ghs-core/vendor/game/model/ObjectiveContainer';
 import { useState, type ReactNode } from 'react';
+import { HoverTip } from '../../../components/Tooltip';
 import { Modal } from '../../../components/ui';
+import { assetUrl, useImages } from '../../../lib/board-data';
 import { useCampaign } from '../../../lib/campaign-store';
 import { useMe } from '../../../lib/me';
 import { AmDeck } from './Decks';
@@ -199,8 +201,11 @@ function InitiativeInput({ character, disabled }: { character: Character; disabl
 function MonsterCard({ monster, onMenu }: { monster: Monster; onMenu(refs: EntityRef[]): void }) {
   const { send } = useCampaign();
   const [picking, setPicking] = useState<number>();
+  const images = useImages();
   const ability = gameManager.monsterManager.getAbilityCard(monster);
   const drawn = gameManager.game.state === GameState.next && ability;
+  const deck = gameManager.deckData(monster);
+  const abilityImage = ability?.cardId !== undefined ? images?.monsterAbilityCards?.[`${deck.edition}:${deck.name}`]?.[ability.cardId] : undefined;
   const entities = [...monster.entities].filter((e) => !e.dead).sort(gameManager.monsterManager.sortEntities);
   const normal = gameManager.monsterManager.getStat(monster, monster.boss ? MonsterType.boss : MonsterType.normal);
   const elite = monster.boss ? undefined : gameManager.monsterManager.getStat(monster, MonsterType.elite);
@@ -221,7 +226,22 @@ function MonsterCard({ monster, onMenu }: { monster: Monster; onMenu(refs: Entit
           level {monster.level}
           {monster.isAlly && ' · ally'}
         </span>
-        {drawn && <span className="text-sm text-frost-300">{ability.name}{ability.shuffle ? ' ↻' : ''}</span>}
+        {drawn && (
+          <HoverTip
+            tip={{
+              title: ability.name ?? '',
+              kind: `Initiative ${ability.initiative}`,
+              color: 'var(--color-ember-400)',
+              image: abilityImage && assetUrl(abilityImage),
+              body: ability.shuffle ? <span>Shuffle the monster ability deck at the end of the round.</span> : undefined
+            }}
+          >
+            <span className="text-sm text-frost-300">
+              {ability.name}
+              {ability.shuffle ? ' ↻' : ''}
+            </span>
+          </HoverTip>
+        )}
         <span className="ml-auto flex gap-1">
           {!monster.boss && (
             <button className="btn h-7 px-2 text-xs" onClick={() => send('monster.addStandee', { edition: monster.edition, name: monster.name, type: 'normal' }).catch(() => {})}>

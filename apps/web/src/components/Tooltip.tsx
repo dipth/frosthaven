@@ -1,11 +1,11 @@
 /**
- * The app's tooltip card (map overlays, figures, element tracker): a title, a
- * coloured kind line and a short body.
+ * The app's tooltip card (map overlays, figures, element tracker, monster
+ * ability cards): a title, a coloured kind line, an optional image and a short body.
  */
 import { useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 
-export function TipCard({ title, kind, color, children }: { title: string; kind: string; color: string; children?: ReactNode }) {
+export function TipCard({ title, kind, color, image, children }: { title: string; kind: string; color: string; image?: string; children?: ReactNode }) {
   return (
     <div className="rounded-lg border border-ink-600 bg-ink-900/95 px-3 py-2 text-sm shadow-lg">
       <div className="font-medium text-frost-100">{title}</div>
@@ -13,7 +13,9 @@ export function TipCard({ title, kind, color, children }: { title: string; kind:
         <span className="h-2.5 w-2.5 rounded-full" style={{ background: color }} />
         {kind}
       </div>
-      <div className="grid gap-1 text-xs text-frost-200">{children}</div>
+      {/* Card art is 600x391; the size reserves its space before it loads so HoverTip places the card right. */}
+      {image && <img src={image} alt="" width={600} height={391} className="mb-1 h-auto w-full rounded" />}
+      {children && <div className="grid gap-1 text-xs text-frost-200">{children}</div>}
     </div>
   );
 }
@@ -22,7 +24,7 @@ export function TipCard({ title, kind, color, children }: { title: string; kind:
  * Shows a TipCard while the mouse is over the wrapped element: above it, or
  * below when there is no room, kept inside the window horizontally.
  */
-export function HoverTip({ tip, children }: { tip: { title: string; kind: string; color: string; body?: ReactNode }; children: ReactNode }) {
+export function HoverTip({ tip, children }: { tip: { title: string; kind: string; color: string; image?: string; body?: ReactNode }; children: ReactNode }) {
   const anchor = useRef<HTMLSpanElement>(null);
   const card = useRef<HTMLDivElement>(null);
   const [rect, setRect] = useState<DOMRect>();
@@ -47,10 +49,10 @@ export function HoverTip({ tip, children }: { tip: { title: string; kind: string
         createPortal(
           <div
             ref={card}
-            className={`pointer-events-none fixed z-50 w-60 ${pos?.below ? 'pt-2' : 'pb-2'}`}
+            className={`pointer-events-none fixed z-50 ${tip.image ? 'w-80' : 'w-60'} ${pos?.below ? 'pt-2' : 'pb-2'}`}
             style={{ left: pos?.left ?? 0, top: pos?.top ?? 0, visibility: pos ? 'visible' : 'hidden' }}
           >
-            <TipCard title={tip.title} kind={tip.kind} color={tip.color}>
+            <TipCard title={tip.title} kind={tip.kind} color={tip.color} image={tip.image}>
               {tip.body}
             </TipCard>
           </div>,
