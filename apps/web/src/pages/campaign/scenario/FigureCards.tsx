@@ -54,7 +54,7 @@ function HealthBar({ entity }: { entity: Entity }) {
   );
 }
 
-function Conditions({ entity }: { entity: Entity }) {
+export function Conditions({ entity }: { entity: Entity }) {
   const active = entity.entityConditions.filter((c) => !c.expired && !c.types?.includes('hidden' as never));
   if (!active.length) return null;
   return (

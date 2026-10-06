@@ -12,6 +12,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { assetUrl, slug, useBoard, useImages, useTileOverrides, type ImageIndex } from '../../../lib/board-data';
 import { useMe } from '../../../lib/me';
 import { useCampaign } from '../../../lib/campaign-store';
+import { Conditions } from './FigureCards';
 import { entityRef, maxHealth } from './helpers';
 
 const SIZE = 100;
@@ -149,8 +150,9 @@ export function Board({ onMenu }: { onMenu(refs: EntityRef[]): void }) {
   const [view, setView] = useState({ x: 0, y: 0, k: 0.5 });
   const [drag, setDrag] = useState<{ piece: Piece; at: { x: number; y: number }; moved: boolean; start: { x: number; y: number } }>();
   const [pan, setPan] = useState<{ x: number; y: number; vx: number; vy: number }>();
-  /** Overlay tooltip: shown on mouse hover, or pinned by a tap/click. */
-  const [tip, setTip] = useState<{ id: string; pinned: boolean }>();
+  /** Map tooltip ('item:<id>' or 'piece:<key>'): shown on mouse hover, or pinned by tapping an overlay. */
+  const [tip, setTip] = useState<{ key: string; pinned: boolean }>();
+  const hover = (key: string) => (on: boolean) => setTip((t) => (t?.pinned ? t : on ? { key, pinned: false } : t?.key === key ? undefined : t));
   const pressedAt = useRef<{ x: number; y: number }>(undefined);
   const tapped = (e: React.MouseEvent) => !pressedAt.current || Math.hypot(e.clientX - pressedAt.current.x, e.clientY - pressedAt.current.y) < 6;
 
@@ -381,13 +383,13 @@ export function Board({ onMenu }: { onMenu(refs: EntityRef[]): void }) {
                 showStarts={showStarts}
                 images={images}
                 onClick={() => clickItem(id, item)}
-                onHover={(on) => setTip((t) => (t?.pinned ? t : on ? { id, pinned: false } : undefined))}
-                onTap={(e) => tapped(e) && setTip((t) => (t?.pinned && t.id === id ? undefined : { id, pinned: true }))}
+                onHover={hover(`item:${id}`)}
+                onTap={(e) => tapped(e) && setTip((t) => (t?.pinned && t.key === `item:${id}` ? undefined : { key: `item:${id}`, pinned: true }))}
               />
             ))}
             {placed.map((piece) =>
               drag?.piece.key === piece.key && drag.moved ? null : (
-                <PieceView key={piece.key} piece={piece} at={hexToPixel(positions[piece.key]!, SIZE)} onPointerDown={(e) => startDrag(piece, e)} />
+                <PieceView key={piece.key} piece={piece} at={hexToPixel(positions[piece.key]!, SIZE)} onPointerDown={(e) => startDrag(piece, e)} onHover={hover(`piece:${piece.key}`)} />
               )
             )}
             {drag?.moved && (
@@ -402,7 +404,15 @@ export function Board({ onMenu }: { onMenu(refs: EntityRef[]): void }) {
             )}
           </g>
         </svg>
-        {tip && <OverlayTip entry={items.find((i) => i.id === tip.id)} removed={removed.has(tip.id)} view={view} />}
+        {tip && !drag?.moved && (
+          <BoardTip
+            entry={items.find((i) => `item:${i.id}` === tip.key)}
+            piece={placed.find((p) => `piece:${p.key}` === tip.key)}
+            at={positions}
+            removed={tip.key.startsWith('item:') && removed.has(tip.key.slice(5))}
+            view={view}
+          />
+        )}
         {zoomHint && (
           <div className="pointer-events-none absolute inset-0 grid place-items-center bg-ink-950/40">
             <span className="rounded-lg bg-ink-900/90 px-3 py-1.5 text-sm text-frost-100">
@@ -538,7 +548,13 @@ function BoardItemView({
     }
     const loot = item.name === 'loot';
     return (
-      <g onPointerDown={(e) => e.stopPropagation()} onClick={onClick} className="cursor-pointer">
+      <g
+        onPointerDown={(e) => e.stopPropagation()}
+        onPointerEnter={(e) => e.pointerType === 'mouse' && onHover(true)}
+        onPointerLeave={(e) => e.pointerType === 'mouse' && onHover(false)}
+        onClick={onClick}
+        className="cursor-pointer"
+      >
         <circle cx={c.x} cy={c.y} r={R * 0.45} fill={loot ? '#fde68a' : '#1e293b'} stroke="#fef3c7" strokeWidth={3} />
         {loot && images?.icons['loot'] ? (
           <image href={assetUrl(images.icons['loot'])} x={c.x - R * 0.32} y={c.y - R * 0.32} width={R * 0.64} height={R * 0.64} />
@@ -629,36 +645,122 @@ function overlayInfo(item: Overlay, removed: boolean): { kind: string; text: str
   return { kind: item.type || 'Overlay', text: 'See the scenario book for how this tile works.' };
 }
 
-function OverlayTip({ entry, removed, view }: { entry?: { item: BoardItem }; removed: boolean; view: { x: number; y: number; k: number } }) {
-  if (!entry || entry.item.kind !== 'overlay') return null;
-  const item = entry.item;
-  const points = item.hexes.map((h) => hexToPixel(h, SIZE));
-  const x = view.x + view.k * (points.reduce((sum, p) => sum + p.x, 0) / points.length);
-  const y = view.y + view.k * (Math.min(...points.map((p) => p.y)) - R);
-  const { kind, text } = overlayInfo(item, removed);
-  const door = /door/i.test(item.name + item.type);
-  const color = door ? OVERLAY_BORDER['Door'] : (OVERLAY_BORDER[item.type] ?? '#94a3b8');
+/** Shared look for every tooltip on the map, anchored above a world point. */
+function MapTip({
+  at,
+  view,
+  title,
+  kind,
+  color,
+  children
+}: {
+  at: { x: number; y: number };
+  view: { x: number; y: number; k: number };
+  title: string;
+  kind: string;
+  color: string;
+  children?: React.ReactNode;
+}) {
   return (
-    <div className="pointer-events-none absolute z-10 w-60 -translate-x-1/2 -translate-y-full pb-2" style={{ left: x, top: y }}>
+    <div className="pointer-events-none absolute z-10 w-60 -translate-x-1/2 -translate-y-full pb-2" style={{ left: view.x + view.k * at.x, top: view.y + view.k * at.y }}>
       <div className="rounded-lg border border-ink-600 bg-ink-900/95 px-3 py-2 text-sm shadow-lg">
-        <div className="font-medium text-frost-100">{item.name}</div>
+        <div className="font-medium text-frost-100">{title}</div>
         <div className="mb-1 flex items-center gap-1.5 text-xs text-frost-400">
           <span className="h-2.5 w-2.5 rounded-full" style={{ background: color }} />
           {kind}
         </div>
-        <div className="text-xs text-frost-200">{text}</div>
+        <div className="grid gap-1 text-xs text-frost-200">{children}</div>
       </div>
     </div>
   );
 }
 
-function PieceView({ piece, at, ghost, onPointerDown }: { piece: Piece; at: { x: number; y: number }; ghost?: boolean; onPointerDown?(e: React.PointerEvent): void }) {
+function pieceKind(piece: Piece): string {
+  if (piece.ref.kind === 'character') return 'Character';
+  if (piece.figure instanceof Character) return 'Summon';
+  if (piece.figure instanceof ObjectiveContainer) return piece.figure.escort ? 'Escort' : 'Objective';
+  const type = (piece.entity as { type?: string }).type ?? 'normal';
+  return `${type[0]!.toUpperCase()}${type.slice(1)} monster`;
+}
+
+function BoardTip({
+  entry,
+  piece,
+  at,
+  removed,
+  view
+}: {
+  entry?: { item: BoardItem };
+  piece?: Piece;
+  at: Record<string, Hex>;
+  removed: boolean;
+  view: { x: number; y: number; k: number };
+}) {
+  if (piece && at[piece.key]) {
+    const c = hexToPixel(at[piece.key]!, SIZE);
+    const hp = piece.entity.health;
+    const max = maxHealth(piece.entity);
+    return (
+      <MapTip at={{ x: c.x, y: c.y - R }} view={view} title={`${piece.label}${piece.number ? ` ${piece.number}` : ''}`} kind={pieceKind(piece)} color={piece.ring}>
+        <span>
+          {hp}/{max} HP{piece.active ? ' · taking its turn' : ''}
+        </span>
+        <Conditions entity={piece.entity} />
+      </MapTip>
+    );
+  }
+  const item = entry?.item;
+  if (item?.kind === 'token') {
+    const c = hexToPixel(item.hex, SIZE);
+    const loot = item.name === 'loot';
+    return (
+      <MapTip at={{ x: c.x, y: c.y - R * 0.5 }} view={view} title={loot ? 'Loot' : item.name === 'goal' ? 'Goal' : `Token ${item.name.toUpperCase()}`} kind={loot ? 'Loot token' : 'Scenario token'} color="#fef3c7">
+        {loot ? 'A character picks it up by ending a move here or with a loot ability. Click to remove it.' : "See the scenario's special rules. Click to remove it."}
+      </MapTip>
+    );
+  }
+  if (item?.kind !== 'overlay') return null;
+  const points = item.hexes.map((h) => hexToPixel(h, SIZE));
+  const { kind, text } = overlayInfo(item, removed);
+  const door = /door/i.test(item.name + item.type);
+  return (
+    <MapTip
+      at={{ x: points.reduce((sum, p) => sum + p.x, 0) / points.length, y: Math.min(...points.map((p) => p.y)) - R }}
+      view={view}
+      title={item.name}
+      kind={kind}
+      color={door ? OVERLAY_BORDER['Door']! : (OVERLAY_BORDER[item.type] ?? '#94a3b8')}
+    >
+      {text}
+    </MapTip>
+  );
+}
+
+function PieceView({
+  piece,
+  at,
+  ghost,
+  onPointerDown,
+  onHover
+}: {
+  piece: Piece;
+  at: { x: number; y: number };
+  ghost?: boolean;
+  onPointerDown?(e: React.PointerEvent): void;
+  onHover?(on: boolean): void;
+}) {
   const r = (piece.small ? 0.3 : 0.4) * SIZE;
   const hp = piece.entity.health;
   const max = maxHealth(piece.entity);
   return (
-    <g transform={`translate(${at.x} ${at.y})`} opacity={ghost ? 0.75 : 1} onPointerDown={onPointerDown} className={ghost ? 'pointer-events-none' : 'cursor-grab'}>
-      <title>{`${piece.label}${piece.number ? ` ${piece.number}` : ''} · ${hp}/${max} HP`}</title>
+    <g
+      transform={`translate(${at.x} ${at.y})`}
+      opacity={ghost ? 0.75 : 1}
+      onPointerDown={onPointerDown}
+      onPointerEnter={(e) => e.pointerType === 'mouse' && onHover?.(true)}
+      onPointerLeave={(e) => e.pointerType === 'mouse' && onHover?.(false)}
+      className={ghost ? 'pointer-events-none' : 'cursor-grab'}
+    >
       {piece.active && <circle r={r + 10} fill="none" stroke="#fde047" strokeWidth={6} opacity={0.9} />}
       <circle r={r} fill={piece.light ? '#e0f2fe' : '#0f172a'} />
       {piece.image ? (
