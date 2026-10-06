@@ -57,6 +57,23 @@ describe('scenario play', () => {
     expect(s.ghs.monsters.find((m) => m.name === monster.name)?.entities.find((e) => e.number === entity.number && !e.dead)).toBeUndefined();
   });
 
+  it('places character markers on monsters that stay across rounds until removed', () => {
+    const refs = start.ghs.monsters
+      .flatMap((m) => m.entities.map((e) => ({ kind: 'monster' as const, edition: m.edition, name: m.name, number: e.number })))
+      .slice(0, 2);
+    const markers = (s: CampaignState) => refs.map((r) => s.ghs.monsters.find((m) => m.name === r.name)!.entities.find((e) => e.number === r.number)!.markers ?? []);
+    let s = run(start, 'entity.setMarker', { targets: refs, character: { edition: 'fh', name: 'drifter' }, on: true });
+    expect(markers(s).slice(0, 2)).toEqual([['fh-drifter'], ['fh-drifter']]);
+    s = run(s, 'entity.setMarker', { targets: refs, character: { edition: 'fh', name: 'drifter' }, on: true });
+    expect(markers(s)[0]).toEqual(['fh-drifter']);
+    s = drawRound(s);
+    s = run(s, 'round.next');
+    s = drawRound(s);
+    expect(markers(s)[1]).toEqual(['fh-drifter']);
+    s = run(s, 'entity.setMarker', { targets: [refs[0]!], character: { edition: 'fh', name: 'drifter' }, on: false });
+    expect(markers(s).slice(0, 2)).toEqual([[], ['fh-drifter']]);
+  });
+
   it('adds standees and refuses duplicates', () => {
     const monster = start.ghs.monsters[0]!;
     let s = run(start, 'monster.addStandee', { edition: monster.edition, name: monster.name, type: 'elite' });

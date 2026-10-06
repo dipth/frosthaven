@@ -119,3 +119,18 @@ export function resolveRef(ref: EntityRef): { figure: Figure; entity: Entity } |
   const entity = figure?.entities.find((e) => e.number === ref.number && !e.dead);
   return figure && entity ? { figure, entity } : undefined;
 }
+
+/** Characters that can put their token on figures: everyone taking part in the scenario. */
+export function markerCharacters(): Character[] {
+  return gameManager.game.figures.filter((f): f is Character => f instanceof Character && !f.absent);
+}
+
+export function markerKey(character: Character): string {
+  return character.edition + '-' + character.name;
+}
+
+/** Characters whose tokens are on an entity, in party order. */
+export function entityMarkers(entity: Entity): Character[] {
+  const markers = entity.markers ?? [];
+  return markers.length ? gameManager.game.figures.filter((f): f is Character => f instanceof Character && markers.includes(markerKey(f))) : [];
+}

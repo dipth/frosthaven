@@ -24,6 +24,9 @@ const attackModifiers: Record<string, string> = {
 /** Text for placeholders GHS renders as icons with values (e.g. `game.action.attack.valueSign:1`). */
 function placeholderText(key: string, depth: number): string | undefined {
   const [path, value] = key.split(':') as [string, string | undefined];
+  if (/^(data|game)\.characterIcon(Colored)?\./.test(path)) {
+    return '';
+  }
   const signed = path.endsWith('.valueSign');
   const base = signed ? path.slice(0, -'.valueSign'.length) : path;
   if (base === 'game' && signed && value !== undefined) {
@@ -102,5 +105,5 @@ export function undoInfoText(info: string[]): string {
   if (label === 'state.info.' + key || label === key) {
     return [key, ...args].join(' ');
   }
-  return plainText(label);
+  return plainText(label).trim();
 }

@@ -11,7 +11,7 @@ import { assetUrl, useImages } from '../../../lib/board-data';
 import { useCampaign } from '../../../lib/campaign-store';
 import { useMe } from '../../../lib/me';
 import { AmDeck } from './Decks';
-import { amText, displayName, entityRef, figureRef, maxHealth } from './helpers';
+import { amText, displayName, entityMarkers, entityRef, figureRef, maxHealth } from './helpers';
 
 export function FigureCard({ figure, onMenu }: { figure: Figure; onMenu(refs: EntityRef[]): void }) {
   if (figure instanceof Character) return <CharacterCard character={figure} onMenu={onMenu} />;
@@ -58,13 +58,19 @@ function HealthBar({ entity }: { entity: Entity }) {
 
 export function Conditions({ entity }: { entity: Entity }) {
   const active = entity.entityConditions.filter((c) => !c.expired && !c.types?.includes('hidden' as never));
-  if (!active.length) return null;
+  const markers = entityMarkers(entity);
+  if (!active.length && !markers.length) return null;
   return (
     <span className="flex flex-wrap gap-1">
       {active.map((c) => (
         <span key={c.name} className={`rounded px-1.5 text-[11px] ${c.types?.includes('negative' as never) ? 'bg-blood-400/20 text-blood-400' : 'bg-moss-400/20 text-moss-400'}`}>
           {labelText('game.condition.' + c.name)}
           {c.value > 1 ? ` ${c.value}` : ''}
+        </span>
+      ))}
+      {markers.map((c) => (
+        <span key={c.name} className="rounded px-1.5 text-[11px]" style={{ background: `${c.color}33`, color: c.color }} title={`${displayName(c)} token`}>
+          ● {displayName(c)}
         </span>
       ))}
     </span>

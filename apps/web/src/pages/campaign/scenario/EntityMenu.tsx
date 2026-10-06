@@ -5,7 +5,7 @@ import { MonsterType } from '@fh/ghs-core/vendor/game/model/data/MonsterType';
 import { MonsterEntity } from '@fh/ghs-core/vendor/game/model/MonsterEntity';
 import { Modal } from '../../../components/ui';
 import { useCampaign } from '../../../lib/campaign-store';
-import { displayName, maxHealth, resolveRef } from './helpers';
+import { displayName, markerCharacters, markerKey, maxHealth, resolveRef } from './helpers';
 
 /** Edit one or more entities: like GHS' entities menu, but each click is applied immediately. */
 export function EntityMenu({ refs, onClose }: { refs: EntityRef[]; onClose(): void }) {
@@ -87,6 +87,28 @@ export function EntityMenu({ refs, onClose }: { refs: EntityRef[]; onClose(): vo
       <ConditionChips names={negative.map((c) => c.name)} has={has} onToggle={(name, on) => run(on ? 'entity.addCondition' : 'entity.removeCondition', { condition: name })} tone="blood" />
       <div className="label mt-3">Positive conditions</div>
       <ConditionChips names={positive.map((c) => c.name)} has={has} onToggle={(name, on) => run(on ? 'entity.addCondition' : 'entity.removeCondition', { condition: name })} tone="moss" />
+
+      {markerCharacters().length > 0 && (
+        <>
+          <div className="label mt-3">Character tokens</div>
+          <div className="flex flex-wrap gap-1.5">
+            {markerCharacters().map((c) => {
+              const on = live.every(({ entity }) => entity.markers?.includes(markerKey(c)));
+              return (
+                <button
+                  key={markerKey(c)}
+                  onClick={() => run('entity.setMarker', { character: { edition: c.edition, name: c.name }, on: !on })}
+                  className={`flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs transition ${on ? '' : 'border-ink-600 text-frost-400 hover:text-frost-100'}`}
+                  style={on ? { borderColor: c.color, background: `${c.color}33`, color: c.color } : undefined}
+                >
+                  <span className="h-2 w-2 rounded-full" style={{ background: c.color }} />
+                  {displayName(c)}
+                </button>
+              );
+            })}
+          </div>
+        </>
+      )}
 
       {current && (
         <div className="mt-4 grid grid-cols-2 gap-3 text-sm">

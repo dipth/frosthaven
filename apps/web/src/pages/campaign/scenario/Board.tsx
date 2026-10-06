@@ -14,7 +14,7 @@ import { TipCard } from '../../../components/Tooltip';
 import { useMe } from '../../../lib/me';
 import { useCampaign } from '../../../lib/campaign-store';
 import { Conditions } from './FigureCards';
-import { entityRef, maxHealth } from './helpers';
+import { entityMarkers, entityRef, maxHealth } from './helpers';
 
 const SIZE = 100;
 const R = SIZE / Math.sqrt(3);
@@ -32,6 +32,8 @@ interface Piece {
   light?: boolean;
   small?: boolean;
   active: boolean;
+  /** Character tokens on the figure. */
+  markers?: { key: string; color: string; icon?: string }[];
 }
 
 function pieces(images: ImageIndex | undefined): Piece[] {
@@ -91,6 +93,9 @@ function pieces(images: ImageIndex | undefined): Piece[] {
         });
       }
     }
+  }
+  for (const piece of out) {
+    piece.markers = entityMarkers(piece.entity).map((c) => ({ key: c.name, color: c.color, icon: images?.icons[slug(c.name)] }));
   }
   return out;
 }
@@ -809,6 +814,16 @@ function PieceView({
           </text>
         </g>
       )}
+      {piece.markers?.map((m, i) => {
+        // Around the lower-left edge, clockwise from the bottom.
+        const a = ((135 + i * 40) * Math.PI) / 180;
+        return (
+          <g key={m.key} transform={`translate(${Math.cos(a) * r} ${Math.sin(a) * r})`}>
+            <circle r={14} fill={m.color} stroke="#0f172a" strokeWidth={3} />
+            {m.icon && <image href={assetUrl(m.icon)} x={-9} y={-9} width={18} height={18} />}
+          </g>
+        );
+      })}
       <rect x={-r} y={r + 4} width={2 * r} height={8} rx={4} fill="#1e293b" />
       <rect x={-r} y={r + 4} width={(2 * r * Math.max(0, hp)) / Math.max(1, max)} height={8} rx={4} fill={hp / max > 0.5 ? '#4ade80' : hp / max > 0.25 ? '#facc15' : '#f87171'} />
     </g>

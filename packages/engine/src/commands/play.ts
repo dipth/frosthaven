@@ -408,6 +408,24 @@ const commands: CommandDef[] = [
     }
   }),
 
+  defineCommand({
+    type: 'entity.setMarker',
+    // A character's token on figures (e.g. Deathwalker's Call to the Abyss): stays until removed.
+    payload: z.object({ targets, character: z.object({ edition: z.string(), name: z.string() }), on: z.boolean() }),
+    run(rt, { targets: refs, character: ref, on }) {
+      const character = resolveFigure(rt, { kind: 'character', ...ref }) as Character;
+      const marker = character.edition + '-' + character.name;
+      const resolved = refs.map((r) => resolveEntity(rt, r));
+      const single = resolved.length === 1 ? resolved[0]! : undefined;
+      rt.gm.entityManager.beforeEntities(single?.entity, single?.figure, resolved.map((r) => r.entity), on ? 'addCharacterMarker' : 'removeCharacterMarker', character.name, character.edition + '.' + character.name);
+      resolved.forEach(({ entity }) => {
+        entity.markers ??= [];
+        if (on !== rt.gm.entityManager.hasMarker(entity, marker)) rt.gm.entityManager.toggleMarker(entity, marker);
+      });
+      rt.gm.stateManager.after();
+    }
+  }),
+
   // --- character scenario values ------------------------------------------
   defineCommand({
     type: 'character.changeScenarioXP',

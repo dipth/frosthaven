@@ -61,7 +61,16 @@ async function doBootstrap(load: DataLoader) {
       }
     }
     await settingsManager.updateLocale('en');
+    addLabels();
   } finally {
     globalThis.fetch = originalFetch;
   }
+}
+
+/** Undo-info labels for actions GHS only records one way. */
+function addLabels() {
+  const entities = settingsManager.label.state.info.entities;
+  entities.removeCharacterMarker = Object.fromEntries(
+    Object.entries(entities.addCharacterMarker as Record<string, string>).map(([type, text]) => [type, 'Remove ' + text.replace(' marker for ', ' marker from ')])
+  );
 }
