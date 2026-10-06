@@ -1,9 +1,42 @@
-import type { CampaignState } from './state';
+import type { CampaignState, HandState } from './state';
+
+/** Card ids other players may not see are replaced with this. */
+export const HIDDEN_CARD = -1;
+
+const hide = (cards: number[]) => cards.map(() => HIDDEN_CARD);
 
 /**
- * The view of the campaign a given user may see. Hidden information (other
- * players' hands, unrevealed card choices, battle goals) is redacted here.
+ * The view of the campaign a given user may see. In online mode, other
+ * players' hands and unrevealed card choices are reduced to counts, and their
+ * battle goals and personal quests are hidden. Characters without a player
+ * are visible to everyone (e.g. a shared table device).
  */
-export function projectFor(state: CampaignState, _userId: string): CampaignState {
-  return state;
+export function projectFor(state: CampaignState, userId: string): CampaignState {
+  if (state.ext.mode !== 'online') {
+    return state;
+  }
+  const owners = state.ext.characterOwners;
+  const hiddenFrom = (key: string) => !!owners[key] && owners[key] !== userId;
+  let hands = state.ext.hands;
+  if (hands) {
+    hands = Object.fromEntries(
+      Object.entries(hands).map(([key, h]): [string, HandState] => {
+        if (!hiddenFrom(key)) return [key, h];
+        const view: HandState = { ...h, hand: hide(h.hand) };
+        if (!h.revealed) {
+          view.selected = hide(h.selected);
+          delete view.leading;
+          delete view.longRest;
+          if (h.longRest) view.selected = [HIDDEN_CARD, HIDDEN_CARD];
+        }
+        return [key, view];
+      })
+    );
+  }
+  const characters = state.ghs.characters.map((c) => {
+    if (!hiddenFrom(`${c.edition}:${c.name}`)) return c;
+    const progress = c.progress ? { ...c.progress, personalQuest: '', personalQuestProgress: [] } : c.progress;
+    return { ...c, battleGoals: [], progress };
+  });
+  return { ghs: { ...state.ghs, characters }, ext: { ...state.ext, ...(hands ? { hands } : {}) } };
 }

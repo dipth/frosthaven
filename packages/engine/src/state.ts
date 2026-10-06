@@ -38,6 +38,27 @@ export interface ExtState {
   outpostPhase?: OutpostPhase;
   /** Recent Forteller narration cues not yet dismissed by the narrator. */
   narration?: NarrationCue[];
+  /** Online mode: each character's ability cards during a scenario (key `edition:name`). */
+  hands?: Record<string, HandState>;
+}
+
+export type CardPile = 'hand' | 'discard' | 'lost' | 'active';
+
+/** A character's ability cards in an online scenario. Card ids are GHS ability cardIds. */
+export interface HandState {
+  hand: number[];
+  discard: number[];
+  lost: number[];
+  /** Persistent and round bonuses in play. */
+  active: number[];
+  /** The two cards chosen for this round (hidden from others until revealed). */
+  selected: number[];
+  /** Card whose initiative counts. */
+  leading?: number;
+  /** Long rest instead of playing cards this round. */
+  longRest?: boolean;
+  /** Choices are shown to everyone (initiatives set). */
+  revealed?: boolean;
 }
 
 export const OUTPOST_PHASE_STEPS = ['passage-of-time', 'outpost-event', 'building-operations', 'downtime', 'construction'] as const;

@@ -127,6 +127,10 @@ export function runCommand<S extends z.ZodType>(
   def.run({ gm: gameManager, game: gameManager.game, ext, log: (m) => messages.push(m) }, parsed.data, ctx);
   refreshDerived();
 
+  if (!gameManager.game.scenario) {
+    // Hands only exist during a scenario.
+    delete ext.hands;
+  }
   const next: CampaignState = { ghs: snapshotGhs(), ext };
   addCues(
     ext,

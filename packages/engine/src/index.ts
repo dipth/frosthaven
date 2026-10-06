@@ -20,3 +20,4 @@ export * from './ghs-ui/buildings';
 export * from './ghs-ui/brew';
 export * from './ghs-ui/enhancements';
 export * from './narration';
+export { availableAbilityCards, handSize } from './commands/hands';
