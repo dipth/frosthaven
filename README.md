@@ -17,7 +17,10 @@ packages/ghs-core Gloomhaven Secretariat's game logic, vendored and shimmed to r
 packages/data     pinned upstream data sources -> packages/data/generated (gitignored)
 ```
 
-- **Canonical state** is `{ ghs: GameModel, ext }`. `ghs` is exactly Secretariat's serialized game, so exporting back to Secretariat is lossless. `ext` holds what Secretariat doesn't model: player ownership, session mode, and later the board and hands.
+- **Canonical state** is `{ ghs: GameModel, ext }`. `ghs` is exactly Secretariat's serialized game, so exporting back to Secretariat is lossless. `ext` holds what Secretariat doesn't model: player ownership, session mode, event drafts and follow-ups, outpost attacks, the outpost phase, narration cues, and in online mode the board and card hands.
+- **Hidden information**: in online sessions each client gets `projectFor(state, user)`, which hides other players' hands, unrevealed card choices, battle goals and personal quests.
+- **Physical sync**: the server keeps a baseline of what the physical box looks like (set on create/import and whenever the group marks the box as in sync). The **Box sync** tab lists the changes to make after online play.
+- **Backups**: every few hours each changed campaign is written to `$BACKUP_DIR` as a Secretariat data dump plus the app's full state (newest 30 kept); admins can download them from the Admin page.
 - **Commands** run server-side. The current state is loaded into the GHS managers, the action runs the same way Secretariat's UI performs it (`before()` → manager calls → `after()`), and the result is serialized and persisted as an event. Then each client is sent its own projected view of the state.
 - **Undo** restores `state_before` from the most recent event (the last 100 events keep it).
 - **Session log**: every event stores Secretariat's own undo-info strings plus our messages. The log renders them as text.
@@ -61,6 +64,7 @@ Other tasks: `mise run test`, `mise run typecheck`, `mise run db:generate` (afte
   - fhtts scenario layouts;
   - Worldhaven image indexes.
 - `pnpm assets:sync` downloads about 6,300 Worldhaven images into `$ASSETS_DIR/worldhaven`. They are served only to signed-in users.
+- Online boards: `data:sync` also writes `generated/boards/<scenario>.json` (fhtts layouts in axial hex coordinates) and `generated/images.json`; `pnpm --filter @fh/data boards` rebuilds just those. Tile images are placed with `packages/data/tile-calibration.json` (committed). It was fitted with the Python tools in `packages/data/scripts/calibration/` (needs Pillow and numpy, and the synced images): `calibrate_tiles.py` finds each image's hex grid, `fit_content.py` aligns it using every scenario's content on that tile, and `render_board.py <scenario> out.png` renders a board to check the result.
 - To update Secretariat:
   1. Bump `ghs.commit` in `sources.json`.
   2. Run `pnpm data:sync`.
