@@ -112,12 +112,15 @@ export function buildBoards(outDir: string, calibrationFile: string) {
   const tokens = wh('tokens.json').filter((t) => t.expansion === 'frosthaven' && t.image.includes('/terrain/'));
 
   const terrainImage = (name: string): string | undefined => {
-    const large = /^(Large|Huge) /.test(name);
+    const size = /^Huge /.test(name) ? 'huge' : /^Large /.test(name) ? 'large' : 'small';
     const base = slug(name.replace(/^(Large|Huge) /, ''));
-    const matches = tokens.filter((t) => slug(t.name) === base);
+    let matches = tokens.filter((t) => slug(t.name) === base);
+    // e.g. 'Spike Pit' is the 'spike pit trap' token.
+    if (!matches.length) matches = tokens.filter((t) => slug(t.name).startsWith(base));
     if (!matches.length) return undefined;
     const pick =
-      matches.find((t) => (large ? /-large/.test(t.image) : /-small/.test(t.image))) ??
+      matches.find((t) => t.image.includes(`-${size}`)) ??
+      (size === 'huge' ? matches.find((t) => t.image.includes('-large')) : undefined) ??
       matches.find((t) => /-closed/.test(t.image)) ??
       matches[0]!;
     return pick.image;

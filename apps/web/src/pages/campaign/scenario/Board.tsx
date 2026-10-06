@@ -453,36 +453,18 @@ export function Board({ onMenu }: { onMenu(refs: EntityRef[]): void }) {
   );
 }
 
-const OVERLAY_ICON: Record<string, string> = {
-  Obstacle: 'overlaytileobstacle',
-  'Difficult Terrain': 'overlaytiledifficultterrain',
-  'Hazardous Terrain': 'overlaytilehazardousterrain',
-  'Icy Terrain': 'overlaytileicyterrain',
-  Trap: 'overlaytiletrap',
-  Treasure: 'treasurechest',
-  Objective: 'overlaytileobjective',
-  'Pressure Plate': 'overlaytilepressureplate',
-  Wall: 'overlaytilewall'
-};
-
-const OVERLAY_FILL: Record<string, string> = {
-  Obstacle: 'rgba(120,113,108,0.55)',
-  'Difficult Terrain': 'rgba(56,189,248,0.25)',
-  'Hazardous Terrain': 'rgba(249,115,22,0.35)',
-  'Icy Terrain': 'rgba(186,230,253,0.35)',
-  Trap: 'rgba(239,68,68,0.4)',
-  Treasure: 'rgba(250,204,21,0.45)',
-  Objective: 'rgba(192,132,252,0.4)',
-  'Pressure Plate': 'rgba(163,230,53,0.35)',
-  Wall: 'rgba(30,30,30,0.7)'
-};
-
-/** Terrain drawn with its token art, outlined in a colour per terrain type. */
-const TERRAIN_BORDER: Record<string, string> = {
+/** Overlays are drawn with their token art, outlined in a colour per overlay type. */
+const OVERLAY_BORDER: Record<string, string> = {
   Obstacle: '#d6d3d1',
   'Difficult Terrain': '#38bdf8',
   'Hazardous Terrain': '#f97316',
-  'Icy Terrain': '#e0f2fe'
+  'Icy Terrain': '#e0f2fe',
+  Trap: '#ef4444',
+  Treasure: '#facc15',
+  Objective: '#c084fc',
+  'Pressure Plate': '#a3e635',
+  Wall: '#57534e',
+  Door: '#22c55e'
 };
 
 /**
@@ -547,44 +529,32 @@ function BoardItemView({
     );
   }
   const door = /door/i.test(item.name + item.type);
-  const corridor = /corridor/i.test(item.name + item.type);
   if (removed && !door) return null;
-  const border = TERRAIN_BORDER[item.type];
-  if (border && item.image) {
-    return (
-      <g>
-        <title>{`${item.name} (${item.type})`}</title>
-        <TerrainImage item={item} href={assetUrl(item.image)} />
-        {item.hexes.map((h) => (
-          <polygon key={hexKey(h)} points={hexCorners(h, SIZE, 0.9)} fill="none" stroke={border} strokeWidth={5} strokeOpacity={0.9} />
-        ))}
-      </g>
-    );
-  }
-  const fill = door ? (removed ? 'rgba(34,197,94,0.15)' : 'rgba(34,197,94,0.45)') : corridor ? 'rgba(255,255,255,0.08)' : (OVERLAY_FILL[item.type] ?? 'rgba(148,163,184,0.3)');
-  const interactive = door;
+  const border = door ? OVERLAY_BORDER['Door']! : (OVERLAY_BORDER[item.type] ?? '#94a3b8');
+  // An opened door shows its open art where there is one, otherwise it is faded.
+  const image = item.image && removed ? item.image.replace('-closed', '-open') : item.image;
+  const faded = removed && image === item.image;
   return (
-    <g onPointerDown={interactive ? (e) => e.stopPropagation() : undefined} onClick={interactive ? onClick : undefined} className={interactive ? 'cursor-pointer' : ''}>
+    <g onPointerDown={door ? (e) => e.stopPropagation() : undefined} onClick={door ? onClick : undefined} className={door ? 'cursor-pointer' : ''}>
       <title>{`${item.name}${item.type ? ` (${item.type})` : ''}${door && item.trigger?.what?.name ? ` · section ${item.trigger.what.name}` : ''}`}</title>
+      <g opacity={faded ? 0.4 : 1}>
+        {image ? (
+          <TerrainImage item={item} href={assetUrl(image)} />
+        ) : (
+          item.hexes.map((h) => <polygon key={hexKey(h)} points={hexCorners(h, SIZE, 0.9)} fill={border} fillOpacity={0.35} />)
+        )}
+      </g>
       {item.hexes.map((h) => (
-        <polygon key={hexKey(h)} points={hexCorners(h, SIZE, 0.92)} fill={fill} stroke={door ? '#22c55e' : 'none'} strokeWidth={door ? 4 : 0} />
-      ))}
-      {!door && !corridor && images && OVERLAY_ICON[item.type] && images.icons[OVERLAY_ICON[item.type]!] && (
-        <image
-          href={assetUrl(images.icons[OVERLAY_ICON[item.type]!]!)}
-          x={hexToPixel(item.hexes[0]!, SIZE).x - R * 0.35}
-          y={hexToPixel(item.hexes[0]!, SIZE).y - R * 0.35}
-          width={R * 0.7}
-          height={R * 0.7}
-          opacity={0.85}
-          pointerEvents="none"
+        <polygon
+          key={hexKey(h)}
+          points={hexCorners(h, SIZE, 0.9)}
+          fill={door ? 'transparent' : 'none'}
+          stroke={border}
+          strokeWidth={5}
+          strokeOpacity={removed ? 0.4 : 0.9}
+          strokeDasharray={removed ? '10 8' : undefined}
         />
-      )}
-      {door && !removed && (
-        <text x={hexToPixel(item.hexes[0]!, SIZE).x} y={hexToPixel(item.hexes[0]!, SIZE).y + 8} textAnchor="middle" fontSize={22} fill="#dcfce7" pointerEvents="none">
-          door
-        </text>
-      )}
+      ))}
     </g>
   );
 }
