@@ -10,6 +10,7 @@ import type { Figure } from '@fh/ghs-core/vendor/game/model/Figure';
 import { ObjectiveContainer } from '@fh/ghs-core/vendor/game/model/ObjectiveContainer';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { assetUrl, slug, useBoard, useImages, useTileOverrides, type ImageIndex } from '../../../lib/board-data';
+import { TipCard } from '../../../components/Tooltip';
 import { useMe } from '../../../lib/me';
 import { useCampaign } from '../../../lib/campaign-store';
 import { Conditions } from './FigureCards';
@@ -685,14 +686,9 @@ function MapTip({
       className={`pointer-events-none absolute z-10 w-60 -translate-x-1/2 ${fit.below ? 'pt-2' : '-translate-y-full pb-2'}`}
       style={{ left: x + fit.dx, top: fit.below ? bottom : top }}
     >
-      <div className="rounded-lg border border-ink-600 bg-ink-900/95 px-3 py-2 text-sm shadow-lg">
-        <div className="font-medium text-frost-100">{title}</div>
-        <div className="mb-1 flex items-center gap-1.5 text-xs text-frost-400">
-          <span className="h-2.5 w-2.5 rounded-full" style={{ background: color }} />
-          {kind}
-        </div>
-        <div className="grid gap-1 text-xs text-frost-200">{children}</div>
-      </div>
+      <TipCard title={title} kind={kind} color={color}>
+        {children}
+      </TipCard>
     </div>
   );
 }

@@ -2,6 +2,7 @@ import { Character, gameManager, GameState, labelText } from '@fh/ghs-core';
 import type { AttackModifierDeck } from '@fh/ghs-core/vendor/game/model/data/AttackModifier';
 import { Element, ElementState } from '@fh/ghs-core/vendor/game/model/data/Element';
 import { useState } from 'react';
+import { HoverTip } from '../../../components/Tooltip';
 import { assetUrl, useImages } from '../../../lib/board-data';
 import { useCampaign } from '../../../lib/campaign-store';
 import { amText, amTone, lootText } from './helpers';
@@ -140,6 +141,14 @@ const ELEMENT_COLOR: Record<string, string> = {
   dark: '#a77cff'
 };
 
+/** What an element state means for the players. */
+const ELEMENT_STATE_TEXT: Partial<Record<ElementState, string>> = {
+  [ElementState.inert]: "Can't be consumed. An ability that infuses it makes it strong.",
+  [ElementState.new]: 'Infused this turn. It becomes strong at the end of the turn.',
+  [ElementState.strong]: 'Can be consumed. It wanes at the end of the round.',
+  [ElementState.waning]: 'Can still be consumed. It becomes inert at the end of the round.'
+};
+
 export function ElementBoard() {
   const { send } = useCampaign();
   const images = useImages();
@@ -152,31 +161,45 @@ export function ElementBoard() {
         const waning = state === ElementState.waning;
         const icon = images?.elements?.[type];
         return (
-          <button
+          <HoverTip
             key={type}
-            title={`${labelText('game.element.' + type)}: ${labelText('game.element.state.' + state)} (click to cycle)`}
-            onClick={() => send('element.set', { element: type }).catch(() => {})}
-            className="relative grid h-9 w-9 place-items-center overflow-hidden rounded-full text-[10px] font-semibold uppercase"
-            style={{ boxShadow: strong ? `0 0 8px ${ELEMENT_COLOR[type]}` : undefined }}
+            tip={{
+              title: labelText('game.element.' + type),
+              kind: labelText('game.element.state.' + state).replace(/^./, (c) => c.toUpperCase()),
+              color: strong || waning ? ELEMENT_COLOR[type] : '#64748b',
+              body: (
+                <>
+                  {ELEMENT_STATE_TEXT[state] && <span>{ELEMENT_STATE_TEXT[state]}</span>}
+                  <span className="text-frost-400">Click to change its state.</span>
+                </>
+              )
+            }}
           >
-            {icon ? (
-              <>
-                {/* Inert: a faded grey icon. Waning: colour fills the lower half. Strong: full colour. */}
-                <img src={assetUrl(icon)} alt="" className={`absolute inset-0 h-full w-full ${strong ? '' : 'opacity-30 grayscale'}`} />
-                {waning && <img src={assetUrl(icon)} alt="" className="absolute inset-0 h-full w-full" style={{ clipPath: 'inset(50% 0 0 0)' }} />}
-              </>
-            ) : (
-              <span
-                className="grid h-full w-full place-items-center rounded-full border border-ink-500"
-                style={{
-                  background: strong ? ELEMENT_COLOR[type] : waning ? `linear-gradient(to top, ${ELEMENT_COLOR[type]} 50%, transparent 50%)` : 'transparent',
-                  color: strong ? '#0b1220' : ELEMENT_COLOR[type]
-                }}
-              >
-                {type.slice(0, 2)}
-              </span>
-            )}
-          </button>
+            <button
+              aria-label={`${labelText('game.element.' + type)}: ${labelText('game.element.state.' + state)}`}
+              onClick={() => send('element.set', { element: type }).catch(() => {})}
+              className="relative grid h-9 w-9 place-items-center overflow-hidden rounded-full text-[10px] font-semibold uppercase"
+              style={{ boxShadow: strong ? `0 0 8px ${ELEMENT_COLOR[type]}` : undefined }}
+            >
+              {icon ? (
+                <>
+                  {/* Inert: a faded grey icon. Waning: colour fills the lower half. Strong: full colour. */}
+                  <img src={assetUrl(icon)} alt="" className={`absolute inset-0 h-full w-full ${strong ? '' : 'opacity-30 grayscale'}`} />
+                  {waning && <img src={assetUrl(icon)} alt="" className="absolute inset-0 h-full w-full" style={{ clipPath: 'inset(50% 0 0 0)' }} />}
+                </>
+              ) : (
+                <span
+                  className="grid h-full w-full place-items-center rounded-full border border-ink-500"
+                  style={{
+                    background: strong ? ELEMENT_COLOR[type] : waning ? `linear-gradient(to top, ${ELEMENT_COLOR[type]} 50%, transparent 50%)` : 'transparent',
+                    color: strong ? '#0b1220' : ELEMENT_COLOR[type]
+                  }}
+                >
+                  {type.slice(0, 2)}
+                </span>
+              )}
+            </button>
+          </HoverTip>
         );
       })}
     </div>
