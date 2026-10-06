@@ -40,7 +40,7 @@ export function CharactersTab() {
   );
 
   return (
-    <div className="grid gap-4 lg:grid-cols-[260px_1fr]">
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-4 lg:grid-cols-[260px_minmax(0,1fr)]">
       <aside className="grid content-start gap-3">
         <Panel title="Party">
           <ul className="grid gap-1">
@@ -230,7 +230,7 @@ function CharacterSheet({ character, users }: { character: Character; users: Me[
         )}
       </Panel>
 
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-4 md:grid-cols-2">
         <Panel title="Personal quest">
           <PersonalQuest character={character} canEdit={canEdit} run={run} />
         </Panel>

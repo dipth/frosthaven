@@ -50,7 +50,7 @@ export function DataTab({ campaignId }: { campaignId: string }) {
   }
 
   return (
-    <div className="grid gap-4 md:grid-cols-2">
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-4 md:grid-cols-2">
       <section className="panel grid content-start gap-3 p-4">
         <h2 className="font-medium">Play session</h2>
         {active ? (

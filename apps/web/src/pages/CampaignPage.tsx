@@ -45,7 +45,7 @@ export function CampaignPage({ id }: { id: string }) {
   }
 
   return (
-    <div className="grid gap-4">
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-4">
       <div className="flex flex-wrap items-center gap-3">
         <h1 className="text-2xl font-semibold">{state.ghs.party.name || 'Unnamed party'}</h1>
         <span className="rounded-full border border-ink-600 px-2 py-0.5 text-xs uppercase tracking-wide text-frost-400">{state.ext.mode}</span>

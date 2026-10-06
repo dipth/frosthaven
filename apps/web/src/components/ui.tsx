@@ -2,11 +2,11 @@ import { useEffect, useId, useState, type ReactNode } from 'react';
 
 export function Panel({ title, actions, children, className = '' }: { title?: ReactNode; actions?: ReactNode; children: ReactNode; className?: string }) {
   return (
-    <section className={`panel p-4 ${className}`}>
+    <section className={`panel min-w-0 p-4 ${className}`}>
       {(title || actions) && (
-        <header className="mb-3 flex items-center gap-2">
+        <header className="mb-3 flex flex-wrap items-center gap-2">
           {title && <h2 className="font-medium">{title}</h2>}
-          {actions && <div className="ml-auto flex items-center gap-2">{actions}</div>}
+          {actions && <div className="ml-auto flex flex-wrap items-center gap-2">{actions}</div>}
         </header>
       )}
       {children}

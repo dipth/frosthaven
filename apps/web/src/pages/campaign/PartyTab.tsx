@@ -27,7 +27,7 @@ export function PartyTab() {
   const nextStep = FH_PROSPERITY_STEPS.find((step) => party.prosperity <= step);
 
   return (
-    <div className="grid gap-4 lg:grid-cols-3">
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-4 lg:grid-cols-3">
       <Panel title="Outpost">
         <StatRow label={`Prosperity · level ${prosperityLevel}`} hint={nextStep ? `level ${prosperityLevel + 1} after ${nextStep + 1} checkmarks` : 'maximum'}>
           <Stepper value={party.prosperity} max={132} onChange={(value) => run('party.setProsperity', { value })} />
@@ -208,7 +208,7 @@ function ScenariosPanel() {
 
   return (
     <Panel title="Scenarios" className="lg:col-span-2">
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-4 md:grid-cols-2">
         <div>
           <div className="label">Available ({available.length})</div>
           <ul className="max-h-64 overflow-y-auto text-sm">

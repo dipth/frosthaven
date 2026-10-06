@@ -64,7 +64,7 @@ export function ScenarioTab() {
 
       {online && <Board onMenu={setMenu} />}
 
-      <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
         <div className="grid content-start gap-2">
           {online && <Hands />}
           {figures.map((figure) => (

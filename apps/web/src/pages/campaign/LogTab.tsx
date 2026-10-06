@@ -30,10 +30,10 @@ export function LogTab({ campaignId }: { campaignId: string }) {
     <section className="panel p-4">
       <ol className="divide-y divide-ink-700 text-sm">
         {rows.map((row) => (
-          <li key={row.revision} className={`flex gap-3 py-2 ${row.undoneAt ? 'opacity-50 line-through' : ''}`}>
+          <li key={row.revision} className={`flex flex-wrap gap-x-3 gap-y-0.5 py-2 ${row.undoneAt ? 'opacity-50 line-through' : ''}`}>
             <span className="w-10 shrink-0 text-right font-mono text-xs text-frost-400">{row.revision}</span>
             <span className="w-28 shrink-0 truncate text-frost-300">{row.userName ?? 'system'}</span>
-            <span className="flex-1">
+            <span className="min-w-0 flex-1 break-words">
               {describe(row.type, row.log).map((line, i) => (
                 <div key={i}>{line}</div>
               ))}

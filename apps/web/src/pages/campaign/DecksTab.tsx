@@ -18,7 +18,7 @@ export function DecksTab() {
   const outside = all.filter((card) => !deck.includes(card.cardId));
 
   return (
-    <div className="grid gap-4 lg:grid-cols-[220px_1fr]">
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-4 lg:grid-cols-[220px_minmax(0,1fr)]">
       <Panel title="Decks">
         <ul className="grid gap-1">
           {types.map((t) => (

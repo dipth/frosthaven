@@ -32,7 +32,7 @@ export function OutpostTab() {
     .sort((a, b) => Number(a.item.id) - Number(b.item.id));
 
   return (
-    <div className="grid gap-4 lg:grid-cols-2">
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-4 lg:grid-cols-2">
       <div className="lg:col-span-2">
         <OutpostPhasePanel />
       </div>
