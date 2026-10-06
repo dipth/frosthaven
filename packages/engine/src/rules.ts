@@ -79,3 +79,11 @@ export function rulesFromGhsSettings(settings: Record<string, unknown> | undefin
 export function applyRules(rules: CampaignRules | undefined) {
   Object.assign(settingsManager.settings, RULE_DEFAULTS, rules ?? {});
 }
+
+/**
+ * Rules in effect for the current play session. Online, the app draws
+ * monster standee numbers (there is no physical bag to draw from).
+ */
+export function sessionRules(ext: { rules?: CampaignRules | undefined; mode?: string }): CampaignRules {
+  return ext.mode === 'online' ? { ...ext.rules, randomStandees: true } : (ext.rules ?? {});
+}

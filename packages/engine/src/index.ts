@@ -21,3 +21,5 @@ export * from './ghs-ui/brew';
 export * from './ghs-ui/enhancements';
 export * from './narration';
 export { availableAbilityCards, handSize } from './commands/hands';
+export { boardKey } from './commands/board';
+export * from './hex';

@@ -93,7 +93,7 @@ function ownedCharacterKey(ref: FigureRef | EntityRef): string | undefined {
   return ref.kind === 'character' || ref.kind === 'summon' ? `${ref.edition}:${ref.name}` : undefined;
 }
 
-function assertControl(state: CampaignState, refs: (FigureRef | EntityRef)[], ctx: CommandContext) {
+export function assertControl(state: CampaignState, refs: (FigureRef | EntityRef)[], ctx: CommandContext) {
   if (ctx.isAdmin) return;
   for (const ref of refs) {
     const key = ownedCharacterKey(ref);

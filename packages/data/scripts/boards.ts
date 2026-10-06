@@ -46,41 +46,7 @@ interface Calibration {
   rotation: number;
 }
 
-export interface BoardTile {
-  name: string;
-  /** Counter-clockwise degrees, multiple of 60 (tile orientation in the scenario book). */
-  orientation: number;
-  origin: Hex;
-  image?: {
-    path: string;
-    width: number;
-    height: number;
-    /** Image px between neighbouring hex centres. */
-    spacing: number;
-    /** Image px of the tile's origin hex. */
-    origin: { x: number; y: number };
-    /** Extra counter-clockwise degrees to bring the image into the tile's frame. */
-    rotation: number;
-  };
-}
-
-export type BoardItem =
-  | { kind: 'monster'; name: string; label: string; hex: Hex; levels: string; standee?: number }
-  | { kind: 'token'; name: string; hex: Hex; trigger?: Trigger }
-  | { kind: 'overlay'; name: string; type: string; hexes: Hex[]; orientation: number; trigger?: Trigger; image?: string };
-
-export interface BoardMap {
-  type: string;
-  name: string;
-  tiles: string[];
-  items: BoardItem[];
-}
-
-export interface BoardFile {
-  scenario: string;
-  tiles: BoardTile[];
-  maps: BoardMap[];
-}
+import type { BoardFile, BoardItem, BoardMap, BoardTile } from '@fh/engine';
 
 const DOUBLE = new Set([
   'Barricade',

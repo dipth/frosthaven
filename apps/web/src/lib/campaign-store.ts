@@ -1,4 +1,4 @@
-import { loadGhs, type CampaignState, type ClientMessage, type LogLine, type PresenceUser, type ServerMessage } from '@fh/engine';
+import { loadGhs, type CampaignState, type ClientMessage, type LogLine, type PresenceUser, type ServerMessage, sessionRules } from '@fh/engine';
 import { create } from 'zustand';
 
 type Status = 'idle' | 'connecting' | 'open' | 'reconnecting' | 'closed';
@@ -61,7 +61,7 @@ export const useCampaign = create<CampaignStore>((set, get) => {
             return;
           }
           // Keep the in-browser GHS runtime in sync so components can use GHS helpers.
-          loadGhs(message.state.ghs, message.state.ext.rules);
+          loadGhs(message.state.ghs, sessionRules(message.state.ext));
           set((s) => ({
             state: message.state,
             revision: message.revision,

@@ -2,7 +2,7 @@ import { gameManager, type Game, type GameManager, type GameModel } from '@fh/gh
 import type { z } from 'zod';
 import { BuildingModel } from '@fh/ghs-core/vendor/game/model/Building';
 import { addCues, detectNarration } from './narration';
-import { applyRules, type CampaignRules } from './rules';
+import { applyRules, sessionRules, type CampaignRules } from './rules';
 import type { CampaignState, ExtState } from './state';
 
 export interface CommandContext {
@@ -121,15 +121,16 @@ export function runCommand<S extends z.ZodType>(
   }
   def.authorize?.(state, parsed.data, ctx);
 
-  loadGhs(state.ghs, state.ext.rules);
+  loadGhs(state.ghs, sessionRules(state.ext));
   const ext = structuredClone(state.ext);
   const messages: string[] = [];
   def.run({ gm: gameManager, game: gameManager.game, ext, log: (m) => messages.push(m) }, parsed.data, ctx);
   refreshDerived();
 
   if (!gameManager.game.scenario) {
-    // Hands only exist during a scenario.
+    // Hands and the board only exist during a scenario.
     delete ext.hands;
+    delete ext.board;
   }
   const next: CampaignState = { ghs: snapshotGhs(), ext };
   addCues(

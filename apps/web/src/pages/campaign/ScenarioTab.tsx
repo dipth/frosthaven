@@ -3,10 +3,12 @@ import { Character, gameManager, GameState, labelText, Monster } from '@fh/ghs-c
 import { useMemo, useState } from 'react';
 import { AddInput, Panel } from '../../components/ui';
 import { useCampaign } from '../../lib/campaign-store';
+import { Board } from './scenario/Board';
 import { AmDeck, ElementBoard, LootDeck } from './scenario/Decks';
 import { EntityMenu } from './scenario/EntityMenu';
 import { FigureCard } from './scenario/FigureCards';
 import { FinishDialog } from './scenario/FinishDialog';
+import { Hands } from './scenario/Hand';
 import { RulesPanel } from './scenario/RulesPanel';
 
 export function ScenarioTab() {
@@ -23,6 +25,7 @@ export function ScenarioTab() {
   const figures = game.figures.filter((f) => gameManager.gameplayFigure(f) || f instanceof Character);
   const hasAllies = figures.some((f) => f instanceof Monster && f.isAlly);
   const drawPhase = game.state === GameState.draw;
+  const online = state!.ext.mode === 'online';
 
   return (
     <div className="grid gap-4">
@@ -42,9 +45,11 @@ export function ScenarioTab() {
               Next turn
             </button>
           )}
-          <button className="btn btn-primary" onClick={() => send('round.next').catch(() => {})}>
-            {drawPhase ? 'Draw' : 'End round'}
-          </button>
+          {!(online && drawPhase) && (
+            <button className="btn btn-primary" onClick={() => send('round.next').catch(() => {})}>
+              {drawPhase ? 'Draw' : 'End round'}
+            </button>
+          )}
           <button className="btn" onClick={() => send('finish.start', { success: true }).catch(() => {})}>
             Won
           </button>
@@ -56,8 +61,11 @@ export function ScenarioTab() {
 
       <RulesPanel />
 
+      {online && <Board onMenu={setMenu} />}
+
       <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
         <div className="grid content-start gap-2">
+          {online && <Hands />}
           {figures.map((figure) => (
             <FigureCard key={`${figure.type}-${figure.edition}-${figure.name}-${'uuid' in figure ? (figure as { uuid: string }).uuid : ''}`} figure={figure} onMenu={setMenu} />
           ))}

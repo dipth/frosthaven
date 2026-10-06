@@ -40,6 +40,22 @@ export interface ExtState {
   narration?: NarrationCue[];
   /** Online mode: each character's ability cards during a scenario (key `edition:name`). */
   hands?: Record<string, HandState>;
+  /** Online mode: what's on the hex map of the current scenario. */
+  board?: BoardState;
+}
+
+export interface Hex {
+  x: number;
+  y: number;
+}
+
+export interface BoardState {
+  /** Scenario index the board belongs to. */
+  scenario: string;
+  /** Figure positions by board key (see boardKey). */
+  positions: Record<string, Hex>;
+  /** Board items (from the scenario's board data) taken off the map: looted tokens, opened doors... */
+  removed: string[];
 }
 
 export type CardPile = 'hand' | 'discard' | 'lost' | 'active';
