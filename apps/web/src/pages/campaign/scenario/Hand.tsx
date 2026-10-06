@@ -107,6 +107,11 @@ function BattleGoals({ character }: { character: Character }) {
   const ref = { edition: character.edition, name: character.name };
   const goals = character.battleGoals.map((id) => gameManager.battleGoalManager.getBattleGoal(id)).filter((g) => !!g);
   const text = (cardId: string) => `${labelText(`data.battleGoals.${cardId}`)}: ${labelText(`data.battleGoals.${cardId}.text`)}`;
+  const checks = (n: number) => (
+    <span className="whitespace-nowrap font-mono text-xs text-moss-400" title={`${n} checkmark${n === 1 ? '' : 's'}`}>
+      {'✓'.repeat(n)}
+    </span>
+  );
   return (
     <div className="mt-3 border-t border-ink-700 pt-2 text-sm">
       <div className="label mb-1">Battle goal</div>
@@ -115,12 +120,16 @@ function BattleGoals({ character }: { character: Character }) {
           Deal battle goals
         </button>
       ) : character.battleGoal ? (
-        <p>{text(goals[0]!.cardId)}</p>
+        <p className="flex items-start gap-2">
+          <span className="flex-1">{text(goals[0]!.cardId)}</span>
+          {checks(goals[0]!.checks ?? 1)}
+        </p>
       ) : (
         <ul className="grid gap-1">
           {goals.map((g, index) => (
             <li key={g.cardId} className="flex items-start gap-2">
               <span className="flex-1">{text(g.cardId)}</span>
+              {checks(g.checks ?? 1)}
               <button className="btn px-2 py-0.5 text-xs" onClick={() => send('battleGoals.choose', { ...ref, index }).catch(() => {})}>
                 Keep
               </button>
