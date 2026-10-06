@@ -12,3 +12,5 @@ test-results/
 playwright-report/
 fixtures/private/
 .backups
+test-results/
+.e2e-backups

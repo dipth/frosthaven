@@ -31,3 +31,5 @@ jobs:
       - run: pnpm data:sync
       - run: pnpm typecheck
       - run: pnpm test
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: mise run e2e

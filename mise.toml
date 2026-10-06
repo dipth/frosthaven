@@ -61,3 +61,7 @@ run = "pnpm typecheck"
 [tasks."dev:seed"]
 description = "Create the local dev admin user 'admin' (password from DEV_ADMIN_PASSWORD in .env)"
 run = "ADMIN_PASSWORD=$DEV_ADMIN_PASSWORD pnpm --filter @fh/server create-admin admin Admin"
+
+[tasks.e2e]
+description = "Multi-user browser tests (builds the web app; needs Docker Postgres)"
+run = "pnpm --filter @fh/web build && pnpm exec playwright test -c e2e/playwright.config.ts"
