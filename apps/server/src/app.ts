@@ -109,8 +109,8 @@ export async function buildApp(options: AppOptions) {
   // Game data and images, signed-in users only.
   const generatedDir = options.generatedDir ?? env.generatedDir;
   // Clients request /game-data/...?v=<dataVersion>, so responses can be cached for long.
-  const dataVersion = directoryVersion(generatedDir);
-  app.get('/api/meta', async () => ({ dataVersion }));
+  // Recomputed per request so data rebuilt under a running server busts the cache.
+  app.get('/api/meta', async () => ({ dataVersion: directoryVersion(generatedDir) }));
   await app.register(fastifyStatic, {
     root: generatedDir,
     prefix: '/game-data/',
