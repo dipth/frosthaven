@@ -7,6 +7,7 @@ import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { buildBoards } from './boards';
 import { applyOfficialCrossover } from './crossover';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -219,5 +220,7 @@ mkdirSync(outDir, { recursive: true });
 await syncGhs();
 await syncFhtts();
 await syncWorldhaven();
+console.log('boards');
+buildBoards(outDir, join(pkgRoot, 'tile-calibration.json'));
 writeFileSync(join(outDir, 'sources.json'), JSON.stringify(sources, null, 2));
 console.log('done ->', outDir);

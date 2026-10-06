@@ -1,0 +1,1218 @@
+{
+ "01-A": {
+  "rotation": 0,
+  "spacing": 116.1,
+  "size": [
+   600,
+   323
+  ],
+  "image": "map-tiles/frosthaven/fh-01a-snow.png",
+  "origin": {
+   "x": 521.4,
+   "y": 199.7
+  },
+  "contentMisses": 28,
+  "contentUses": 113,
+  "preRotation": 0
+ },
+ "01-B": {
+  "rotation": 0,
+  "spacing": 117.0,
+  "size": [
+   600,
+   323
+  ],
+  "image": "map-tiles/frosthaven/fh-01b-metal.png",
+  "origin": {
+   "x": 543.4,
+   "y": 200.0
+  },
+  "contentMisses": 12,
+  "contentUses": 137,
+  "preRotation": 0
+ },
+ "01-C": {
+  "rotation": 0,
+  "spacing": 116.0,
+  "size": [
+   600,
+   323
+  ],
+  "image": "map-tiles/frosthaven/fh-01c-snow.png",
+  "origin": {
+   "x": 520.5,
+   "y": 199.5
+  },
+  "contentMisses": 28,
+  "contentUses": 113,
+  "preRotation": 0
+ },
+ "01-D": {
+  "rotation": 0,
+  "spacing": 116.7,
+  "size": [
+   600,
+   323
+  ],
+  "image": "map-tiles/frosthaven/fh-01d-metal.png",
+  "origin": {
+   "x": 543.7,
+   "y": 200.1
+  },
+  "contentMisses": 12,
+  "contentUses": 137,
+  "preRotation": 0
+ },
+ "01-E": {
+  "rotation": 0,
+  "spacing": 116.35,
+  "size": [
+   600,
+   323
+  ],
+  "image": "map-tiles/frosthaven/fh-01e-snow.png",
+  "origin": {
+   "x": 521.6,
+   "y": 199.7
+  },
+  "contentMisses": 28,
+  "contentUses": 113,
+  "preRotation": 0
+ },
+ "01-F": {
+  "rotation": 0,
+  "spacing": 116.1,
+  "size": [
+   600,
+   323
+  ],
+  "image": "map-tiles/frosthaven/fh-01f-cave.png",
+  "origin": {
+   "x": 542.5,
+   "y": 200.1
+  },
+  "contentMisses": 12,
+  "contentUses": 137,
+  "preRotation": 0
+ },
+ "01-G": {
+  "rotation": 0,
+  "spacing": 116.2,
+  "size": [
+   600,
+   323
+  ],
+  "image": "map-tiles/frosthaven/fh-01g-snow.png",
+  "origin": {
+   "x": 521.4,
+   "y": 200.3
+  },
+  "contentMisses": 28,
+  "contentUses": 113,
+  "preRotation": 0
+ },
+ "01-H": {
+  "rotation": 0,
+  "spacing": 116.35,
+  "size": [
+   600,
+   323
+  ],
+  "image": "map-tiles/frosthaven/fh-01h-dungeon.png",
+  "origin": {
+   "x": 542.6,
+   "y": 200.2
+  },
+  "contentMisses": 12,
+  "contentUses": 137,
+  "preRotation": 0
+ },
+ "02-A": {
+  "rotation": 0,
+  "spacing": 133.25,
+  "size": [
+   549,
+   600
+  ],
+  "image": "map-tiles/frosthaven/fh-02a-dungeon.png",
+  "origin": {
+   "x": 394.5,
+   "y": 459.9
+  },
+  "contentMisses": 17,
+  "contentUses": 283,
+  "preRotation": 0
+ },
+ "02-B": {
+  "rotation": 90,
+  "spacing": 129.85,
+  "size": [
+   549,
+   600
+  ],
+  "image": "map-tiles/frosthaven/fh-02b-wood.png",
+  "origin": {
+   "x": 101.8,
+   "y": 509.5
+  },
+  "contentMisses": 21,
+  "contentUses": 160,
+  "preRotation": 30
+ },
+ "02-C": {
+  "rotation": 0,
+  "spacing": 132.5,
+  "size": [
+   549,
+   600
+  ],
+  "image": "map-tiles/frosthaven/fh-02c-dungeon.png",
+  "origin": {
+   "x": 394.5,
+   "y": 459.0
+  },
+  "contentMisses": 17,
+  "contentUses": 283,
+  "preRotation": 0
+ },
+ "02-D": {
+  "rotation": 90,
+  "spacing": 129.4,
+  "size": [
+   549,
+   600
+  ],
+  "image": "map-tiles/frosthaven/fh-02d-wood.png",
+  "origin": {
+   "x": 131.9,
+   "y": 443.9
+  },
+  "contentMisses": 8,
+  "contentUses": 160,
+  "preRotation": 30
+ },
+ "02-E": {
+  "rotation": 0,
+  "spacing": 133.0,
+  "size": [
+   549,
+   600
+  ],
+  "image": "map-tiles/frosthaven/fh-02e-snow.png",
+  "origin": {
+   "x": 394.5,
+   "y": 459.5
+  },
+  "contentMisses": 17,
+  "contentUses": 283,
+  "preRotation": 0
+ },
+ "02-F": {
+  "rotation": 90,
+  "spacing": 131.45,
+  "size": [
+   549,
+   600
+  ],
+  "image": "map-tiles/frosthaven/fh-02f-metal.png",
+  "origin": {
+   "x": 137.0,
+   "y": 445.8
+  },
+  "contentMisses": 23,
+  "contentUses": 160,
+  "preRotation": 30
+ },
+ "02-G": {
+  "rotation": 0,
+  "spacing": 133.75,
+  "size": [
+   549,
+   600
+  ],
+  "image": "map-tiles/frosthaven/fh-02g-snow.png",
+  "origin": {
+   "x": 394.3,
+   "y": 460.4
+  },
+  "contentMisses": 17,
+  "contentUses": 283,
+  "preRotation": 0
+ },
+ "02-H": {
+  "rotation": 90,
+  "spacing": 130.0,
+  "size": [
+   549,
+   600
+  ],
+  "image": "map-tiles/frosthaven/fh-02h-metal.png",
+  "origin": {
+   "x": 103.5,
+   "y": 443.1
+  },
+  "contentMisses": 8,
+  "contentUses": 160,
+  "preRotation": 30
+ },
+ "02-I": {
+  "rotation": 0,
+  "spacing": 132.85,
+  "size": [
+   549,
+   600
+  ],
+  "image": "map-tiles/frosthaven/fh-02i-dungeon.png",
+  "origin": {
+   "x": 394.5,
+   "y": 459.3
+  },
+  "contentMisses": 17,
+  "contentUses": 283,
+  "preRotation": 0
+ },
+ "02-J": {
+  "rotation": 90,
+  "spacing": 131.1,
+  "size": [
+   549,
+   600
+  ],
+  "image": "map-tiles/frosthaven/fh-02j-cave.png",
+  "origin": {
+   "x": 97.6,
+   "y": 445.6
+  },
+  "contentMisses": 8,
+  "contentUses": 160,
+  "preRotation": 30
+ },
+ "02-K": {
+  "rotation": 0,
+  "spacing": 133.85,
+  "size": [
+   549,
+   600
+  ],
+  "image": "map-tiles/frosthaven/fh-02k-dungeon.png",
+  "origin": {
+   "x": 394.4,
+   "y": 460.8
+  },
+  "contentMisses": 17,
+  "contentUses": 283,
+  "preRotation": 0
+ },
+ "02-L": {
+  "rotation": 90,
+  "spacing": 131.85,
+  "size": [
+   549,
+   600
+  ],
+  "image": "map-tiles/frosthaven/fh-02l-cave.png",
+  "origin": {
+   "x": 137.0,
+   "y": 446.7
+  },
+  "contentMisses": 23,
+  "contentUses": 160,
+  "preRotation": 30
+ },
+ "03-A": {
+  "rotation": 30,
+  "spacing": 86.1,
+  "size": [
+   441,
+   600
+  ],
+  "image": "map-tiles/frosthaven/fh-03a-cave.png",
+  "origin": {
+   "x": 295.1,
+   "y": 514.0
+  },
+  "contentMisses": 0,
+  "contentUses": 32,
+  "preRotation": 30
+ },
+ "03-B": {
+  "rotation": 270,
+  "spacing": 86.05,
+  "size": [
+   441,
+   600
+  ],
+  "image": "map-tiles/frosthaven/fh-03b-metal.png",
+  "origin": {
+   "x": 368.4,
+   "y": 126.8
+  },
+  "contentMisses": 1,
+  "contentUses": 72,
+  "preRotation": 30
+ },
+ "03-C": {
+  "rotation": 30,
+  "spacing": 85.85,
+  "size": [
+   441,
+   600
+  ],
+  "image": "map-tiles/frosthaven/fh-03c-dungeon.png",
+  "origin": {
+   "x": 296.5,
+   "y": 513.6
+  },
+  "contentMisses": 0,
+  "contentUses": 32,
+  "preRotation": 30
+ },
+ "03-D": {
+  "rotation": 270,
+  "spacing": 86.0,
+  "size": [
+   441,
+   600
+  ],
+  "image": "map-tiles/frosthaven/fh-03d-snow.png",
+  "origin": {
+   "x": 370.0,
+   "y": 127.1
+  },
+  "contentMisses": 1,
+  "contentUses": 72,
+  "preRotation": 30
+ },
+ "04-A": {
+  "rotation": 0,
+  "spacing": 100.85,
+  "size": [
+   600,
+   542
+  ],
+  "image": "map-tiles/frosthaven/fh-04a-cave.png",
+  "origin": {
+   "x": 400.4,
+   "y": 435.3
+  },
+  "contentMisses": 0,
+  "contentUses": 163,
+  "preRotation": 0
+ },
+ "04-B": {
+  "rotation": 0,
+  "spacing": 101.1,
+  "size": [
+   600,
+   542
+  ],
+  "image": "map-tiles/frosthaven/fh-04b-metal.png",
+  "origin": {
+   "x": 400.3,
+   "y": 436.3
+  },
+  "contentMisses": 5,
+  "contentUses": 108,
+  "preRotation": 0
+ },
+ "04-C": {
+  "rotation": 0,
+  "spacing": 100.6,
+  "size": [
+   600,
+   542
+  ],
+  "image": "map-tiles/frosthaven/fh-04c-snow.png",
+  "origin": {
+   "x": 400.4,
+   "y": 435.3
+  },
+  "contentMisses": 0,
+  "contentUses": 163,
+  "preRotation": 0
+ },
+ "04-D": {
+  "rotation": 0,
+  "spacing": 101.0,
+  "size": [
+   600,
+   542
+  ],
+  "image": "map-tiles/frosthaven/fh-04d-dungeon.png",
+  "origin": {
+   "x": 400.4,
+   "y": 435.8
+  },
+  "contentMisses": 5,
+  "contentUses": 108,
+  "preRotation": 0
+ },
+ "05-A": {
+  "rotation": 0,
+  "spacing": 116.1,
+  "size": [
+   600,
+   600
+  ],
+  "image": "map-tiles/frosthaven/fh-05a-cave.png",
+  "origin": {
+   "x": 462.4,
+   "y": 500.3
+  },
+  "contentMisses": 0,
+  "contentUses": 73,
+  "preRotation": 0
+ },
+ "05-B": {
+  "rotation": 0,
+  "spacing": 115.85,
+  "size": [
+   600,
+   600
+  ],
+  "image": "map-tiles/frosthaven/fh-05b-snow.png",
+  "origin": {
+   "x": 484.0,
+   "y": 500.2
+  },
+  "contentMisses": 0,
+  "contentUses": 32,
+  "preRotation": 0
+ },
+ "06-A": {
+  "rotation": 270,
+  "spacing": 69.55,
+  "size": [
+   600,
+   222
+  ],
+  "image": "map-tiles/frosthaven/fh-06a-snow.png",
+  "origin": {
+   "x": 540.7,
+   "y": 47.7
+  },
+  "contentMisses": 0,
+  "contentUses": 26,
+  "preRotation": 30
+ },
+ "06-B": {
+  "rotation": 270,
+  "spacing": 69.6,
+  "size": [
+   600,
+   222
+  ],
+  "image": "map-tiles/frosthaven/fh-06b-metal.png",
+  "origin": {
+   "x": 540.8,
+   "y": 48.3
+  },
+  "contentMisses": 0,
+  "contentUses": 46,
+  "preRotation": 30
+ },
+ "07-A": {
+  "rotation": 0,
+  "spacing": 73.35,
+  "size": [
+   600,
+   265
+  ],
+  "image": "map-tiles/frosthaven/fh-07a-cave.png",
+  "origin": {
+   "x": 563.7,
+   "y": 202.7
+  },
+  "contentMisses": 13,
+  "contentUses": 269,
+  "preRotation": 0
+ },
+ "07-B": {
+  "rotation": 0,
+  "spacing": 73.35,
+  "size": [
+   600,
+   265
+  ],
+  "image": "map-tiles/frosthaven/fh-07b-snow.png",
+  "origin": {
+   "x": 549.1,
+   "y": 202.7
+  },
+  "contentMisses": 52,
+  "contentUses": 356,
+  "preRotation": 0
+ },
+ "07-C": {
+  "rotation": 0,
+  "spacing": 73.45,
+  "size": [
+   600,
+   265
+  ],
+  "image": "map-tiles/frosthaven/fh-07c-cave.png",
+  "origin": {
+   "x": 564.0,
+   "y": 202.5
+  },
+  "contentMisses": 13,
+  "contentUses": 269,
+  "preRotation": 0
+ },
+ "07-D": {
+  "rotation": 0,
+  "spacing": 73.25,
+  "size": [
+   600,
+   265
+  ],
+  "image": "map-tiles/frosthaven/fh-07d-snow.png",
+  "origin": {
+   "x": 548.4,
+   "y": 202.5
+  },
+  "contentMisses": 52,
+  "contentUses": 356,
+  "preRotation": 0
+ },
+ "07-E": {
+  "rotation": 0,
+  "spacing": 73.15,
+  "size": [
+   600,
+   265
+  ],
+  "image": "map-tiles/frosthaven/fh-07e-dungeon.png",
+  "origin": {
+   "x": 562.2,
+   "y": 202.2
+  },
+  "contentMisses": 13,
+  "contentUses": 269,
+  "preRotation": 0
+ },
+ "07-F": {
+  "rotation": 0,
+  "spacing": 73.5,
+  "size": [
+   600,
+   265
+  ],
+  "image": "map-tiles/frosthaven/fh-07f-metal.png",
+  "origin": {
+   "x": 549.8,
+   "y": 202.6
+  },
+  "contentMisses": 52,
+  "contentUses": 356,
+  "preRotation": 0
+ },
+ "07-G": {
+  "rotation": 0,
+  "spacing": 73.45,
+  "size": [
+   600,
+   265
+  ],
+  "image": "map-tiles/frosthaven/fh-07g-wood.png",
+  "origin": {
+   "x": 563.5,
+   "y": 202.5
+  },
+  "contentMisses": 13,
+  "contentUses": 269,
+  "preRotation": 0
+ },
+ "07-H": {
+  "rotation": 0,
+  "spacing": 73.35,
+  "size": [
+   600,
+   265
+  ],
+  "image": "map-tiles/frosthaven/fh-07h-metal.png",
+  "origin": {
+   "x": 548.6,
+   "y": 202.7
+  },
+  "contentMisses": 52,
+  "contentUses": 356,
+  "preRotation": 0
+ },
+ "08-A": {
+  "rotation": 0,
+  "spacing": 86.65,
+  "size": [
+   600,
+   464
+  ],
+  "image": "map-tiles/frosthaven/fh-08a-metal.png",
+  "origin": {
+   "x": 428.9,
+   "y": 389.7
+  },
+  "contentMisses": 2,
+  "contentUses": 53,
+  "preRotation": 0
+ },
+ "08-B": {
+  "rotation": 0,
+  "spacing": 86.4,
+  "size": [
+   600,
+   464
+  ],
+  "image": "map-tiles/frosthaven/fh-08b-cave.png",
+  "origin": {
+   "x": 429.2,
+   "y": 389.1
+  },
+  "contentMisses": 2,
+  "contentUses": 40,
+  "preRotation": 0
+ },
+ "09-A": {
+  "rotation": 0,
+  "spacing": 83.85,
+  "size": [
+   600,
+   595
+  ],
+  "image": "map-tiles/frosthaven/fh-09a-snow.png",
+  "origin": {
+   "x": 333.4,
+   "y": 522.8
+  },
+  "contentMisses": 3,
+  "contentUses": 58,
+  "preRotation": 0
+ },
+ "09-B": {
+  "rotation": 0,
+  "spacing": 83.9,
+  "size": [
+   600,
+   595
+  ],
+  "image": "map-tiles/frosthaven/fh-09b-dungeon.png",
+  "origin": {
+   "x": 350.3,
+   "y": 523.1
+  },
+  "contentMisses": 0,
+  "contentUses": 74,
+  "preRotation": 0
+ },
+ "09-C": {
+  "rotation": 0,
+  "spacing": 85.0,
+  "size": [
+   600,
+   595
+  ],
+  "image": "map-tiles/frosthaven/fh-09c-metal.png",
+  "origin": {
+   "x": 333.7,
+   "y": 531.6
+  },
+  "contentMisses": 3,
+  "contentUses": 58,
+  "preRotation": 0
+ },
+ "09-D": {
+  "rotation": 0,
+  "spacing": 85.0,
+  "size": [
+   600,
+   595
+  ],
+  "image": "map-tiles/frosthaven/fh-09d-wood.png",
+  "origin": {
+   "x": 349.8,
+   "y": 531.6
+  },
+  "contentMisses": 0,
+  "contentUses": 74,
+  "preRotation": 0
+ },
+ "10-A": {
+  "rotation": 270,
+  "spacing": 97.15,
+  "size": [
+   522,
+   600
+  ],
+  "image": "map-tiles/frosthaven/fh-10a-metal.png",
+  "origin": {
+   "x": 437.8,
+   "y": 47.1
+  },
+  "contentMisses": 1,
+  "contentUses": 55,
+  "preRotation": 30
+ },
+ "10-B": {
+  "rotation": 270,
+  "spacing": 97.2,
+  "size": [
+   522,
+   600
+  ],
+  "image": "map-tiles/frosthaven/fh-10b-dungeon.png",
+  "origin": {
+   "x": 419.8,
+   "y": 46.5
+  },
+  "contentMisses": 1,
+  "contentUses": 130,
+  "preRotation": 30
+ },
+ "10-C": {
+  "rotation": 270,
+  "spacing": 97.35,
+  "size": [
+   522,
+   600
+  ],
+  "image": "map-tiles/frosthaven/fh-10c-metal.png",
+  "origin": {
+   "x": 438.5,
+   "y": 46.6
+  },
+  "contentMisses": 1,
+  "contentUses": 55,
+  "preRotation": 30
+ },
+ "10-D": {
+  "rotation": 270,
+  "spacing": 97.3,
+  "size": [
+   522,
+   600
+  ],
+  "image": "map-tiles/frosthaven/fh-10d-snow.png",
+  "origin": {
+   "x": 420.1,
+   "y": 46.8
+  },
+  "contentMisses": 1,
+  "contentUses": 130,
+  "preRotation": 30
+ },
+ "11-A": {
+  "rotation": 300,
+  "spacing": 66.3,
+  "size": [
+   600,
+   481
+  ],
+  "image": "map-tiles/frosthaven/fh-11a-snow.png",
+  "origin": {
+   "x": 537.8,
+   "y": 119.6
+  },
+  "contentMisses": 7,
+  "contentUses": 275,
+  "preRotation": 0
+ },
+ "11-B": {
+  "rotation": 0,
+  "spacing": 66.1,
+  "size": [
+   600,
+   481
+  ],
+  "image": "map-tiles/frosthaven/fh-11b-cave.png",
+  "origin": {
+   "x": 558.5,
+   "y": 406.3
+  },
+  "contentMisses": 13,
+  "contentUses": 381,
+  "preRotation": 0
+ },
+ "11-C": {
+  "rotation": 300,
+  "spacing": 66.3,
+  "size": [
+   600,
+   481
+  ],
+  "image": "map-tiles/frosthaven/fh-11c-snow.png",
+  "origin": {
+   "x": 537.8,
+   "y": 119.6
+  },
+  "contentMisses": 7,
+  "contentUses": 275,
+  "preRotation": 0
+ },
+ "11-D": {
+  "rotation": 0,
+  "spacing": 66.4,
+  "size": [
+   600,
+   481
+  ],
+  "image": "map-tiles/frosthaven/fh-11d-cave.png",
+  "origin": {
+   "x": 559.9,
+   "y": 406.4
+  },
+  "contentMisses": 13,
+  "contentUses": 381,
+  "preRotation": 0
+ },
+ "11-E": {
+  "rotation": 300,
+  "spacing": 66.6,
+  "size": [
+   600,
+   481
+  ],
+  "image": "map-tiles/frosthaven/fh-11e-dungeon.png",
+  "origin": {
+   "x": 538.7,
+   "y": 118.9
+  },
+  "contentMisses": 7,
+  "contentUses": 275,
+  "preRotation": 0
+ },
+ "11-F": {
+  "rotation": 0,
+  "spacing": 66.25,
+  "size": [
+   600,
+   481
+  ],
+  "image": "map-tiles/frosthaven/fh-11f-metal.png",
+  "origin": {
+   "x": 559.2,
+   "y": 406.1
+  },
+  "contentMisses": 13,
+  "contentUses": 381,
+  "preRotation": 0
+ },
+ "12-A": {
+  "rotation": 0,
+  "spacing": 67.4,
+  "size": [
+   600,
+   420
+  ],
+  "image": "map-tiles/frosthaven/fh-12a-metal.png",
+  "origin": {
+   "x": 501.6,
+   "y": 349.2
+  },
+  "contentMisses": 7,
+  "contentUses": 139,
+  "preRotation": 0
+ },
+ "12-B": {
+  "rotation": 0,
+  "spacing": 66.5,
+  "size": [
+   600,
+   420
+  ],
+  "image": "map-tiles/frosthaven/fh-12b-cave.png",
+  "origin": {
+   "x": 494.8,
+   "y": 348.0
+  },
+  "contentMisses": 0,
+  "contentUses": 136,
+  "preRotation": 0
+ },
+ "12-C": {
+  "rotation": 0,
+  "spacing": 67.25,
+  "size": [
+   600,
+   420
+  ],
+  "image": "map-tiles/frosthaven/fh-12c-metal.png",
+  "origin": {
+   "x": 501.0,
+   "y": 349.4
+  },
+  "contentMisses": 7,
+  "contentUses": 139,
+  "preRotation": 0
+ },
+ "12-D": {
+  "rotation": 0,
+  "spacing": 67.45,
+  "size": [
+   600,
+   420
+  ],
+  "image": "map-tiles/frosthaven/fh-12d-dungeon.png",
+  "origin": {
+   "x": 502.5,
+   "y": 349.5
+  },
+  "contentMisses": 0,
+  "contentUses": 136,
+  "preRotation": 0
+ },
+ "13-A": {
+  "rotation": 0,
+  "spacing": 82.5,
+  "size": [
+   427,
+   600
+  ],
+  "image": "map-tiles/frosthaven/fh-13a-snow.png",
+  "origin": {
+   "x": 385.8,
+   "y": 513.9
+  },
+  "contentMisses": 8,
+  "contentUses": 411,
+  "preRotation": 0
+ },
+ "13-B": {
+  "rotation": 0,
+  "spacing": 82.5,
+  "size": [
+   427,
+   600
+  ],
+  "image": "map-tiles/frosthaven/fh-13b-cave.png",
+  "origin": {
+   "x": 370.2,
+   "y": 513.9
+  },
+  "contentMisses": 10,
+  "contentUses": 244,
+  "preRotation": 0
+ },
+ "13-C": {
+  "rotation": 0,
+  "spacing": 82.2,
+  "size": [
+   427,
+   600
+  ],
+  "image": "map-tiles/frosthaven/fh-13c-snow.png",
+  "origin": {
+   "x": 384.8,
+   "y": 513.0
+  },
+  "contentMisses": 8,
+  "contentUses": 411,
+  "preRotation": 0
+ },
+ "13-D": {
+  "rotation": 0,
+  "spacing": 82.25,
+  "size": [
+   427,
+   600
+  ],
+  "image": "map-tiles/frosthaven/fh-13d-cave.png",
+  "origin": {
+   "x": 371.6,
+   "y": 513.4
+  },
+  "contentMisses": 10,
+  "contentUses": 244,
+  "preRotation": 0
+ },
+ "13-E": {
+  "rotation": 0,
+  "spacing": 82.3,
+  "size": [
+   427,
+   600
+  ],
+  "image": "map-tiles/frosthaven/fh-13e-dungeon.png",
+  "origin": {
+   "x": 384.7,
+   "y": 513.7
+  },
+  "contentMisses": 8,
+  "contentUses": 411,
+  "preRotation": 0
+ },
+ "13-F": {
+  "rotation": 0,
+  "spacing": 82.35,
+  "size": [
+   427,
+   600
+  ],
+  "image": "map-tiles/frosthaven/fh-13f-metal.png",
+  "origin": {
+   "x": 370.6,
+   "y": 513.0
+  },
+  "contentMisses": 10,
+  "contentUses": 244,
+  "preRotation": 0
+ },
+ "14-A": {
+  "rotation": 30,
+  "spacing": 68.35,
+  "size": [
+   600,
+   355
+  ],
+  "image": "map-tiles/frosthaven/fh-14a-wood.png",
+  "origin": {
+   "x": 69.6,
+   "y": 272.7
+  },
+  "contentMisses": 10,
+  "contentUses": 83,
+  "preRotation": 30
+ },
+ "14-B": {
+  "rotation": 30,
+  "spacing": 68.25,
+  "size": [
+   600,
+   355
+  ],
+  "image": "map-tiles/frosthaven/fh-14b-cave.png",
+  "origin": {
+   "x": 529.5,
+   "y": 272.7
+  },
+  "contentMisses": 0,
+  "contentUses": 65,
+  "preRotation": 30
+ },
+ "15-A": {
+  "rotation": 0,
+  "spacing": 82.6,
+  "size": [
+   490,
+   600
+  ],
+  "image": "map-tiles/frosthaven/fh-15a-snow.png",
+  "origin": {
+   "x": 367.5,
+   "y": 513.8
+  },
+  "contentMisses": 12,
+  "contentUses": 348,
+  "preRotation": 0
+ },
+ "15-B": {
+  "rotation": 0,
+  "spacing": 82.5,
+  "size": [
+   490,
+   600
+  ],
+  "image": "map-tiles/frosthaven/fh-15b-cave.png",
+  "origin": {
+   "x": 367.1,
+   "y": 513.4
+  },
+  "contentMisses": 2,
+  "contentUses": 222,
+  "preRotation": 0
+ },
+ "15-C": {
+  "rotation": 0,
+  "spacing": 82.15,
+  "size": [
+   490,
+   600
+  ],
+  "image": "map-tiles/frosthaven/fh-15c-dungeon.png",
+  "origin": {
+   "x": 367.7,
+   "y": 512.2
+  },
+  "contentMisses": 12,
+  "contentUses": 348,
+  "preRotation": 0
+ },
+ "15-D": {
+  "rotation": 0,
+  "spacing": 82.35,
+  "size": [
+   490,
+   600
+  ],
+  "image": "map-tiles/frosthaven/fh-15d-metal.png",
+  "origin": {
+   "x": 368.0,
+   "y": 513.0
+  },
+  "contentMisses": 2,
+  "contentUses": 222,
+  "preRotation": 0
+ },
+ "16-A": {
+  "rotation": 270,
+  "spacing": 73.55,
+  "size": [
+   523,
+   600
+  ],
+  "image": "map-tiles/frosthaven/fh-16a-snow.png",
+  "origin": {
+   "x": 459.6,
+   "y": 48.8
+  },
+  "contentMisses": 8,
+  "contentUses": 526,
+  "preRotation": 30
+ },
+ "16-B": {
+  "rotation": 270,
+  "spacing": 73.45,
+  "size": [
+   523,
+   600
+  ],
+  "image": "map-tiles/frosthaven/fh-16b-cave.png",
+  "origin": {
+   "x": 445.0,
+   "y": 48.9
+  },
+  "contentMisses": 3,
+  "contentUses": 351,
+  "preRotation": 30
+ },
+ "16-C": {
+  "rotation": 270,
+  "spacing": 73.75,
+  "size": [
+   523,
+   600
+  ],
+  "image": "map-tiles/frosthaven/fh-16c-dungeon.png",
+  "origin": {
+   "x": 460.3,
+   "y": 48.5
+  },
+  "contentMisses": 8,
+  "contentUses": 526,
+  "preRotation": 30
+ },
+ "16-D": {
+  "rotation": 270,
+  "spacing": 73.65,
+  "size": [
+   523,
+   600
+  ],
+  "image": "map-tiles/frosthaven/fh-16d-metal.png",
+  "origin": {
+   "x": 445.3,
+   "y": 48.5
+  },
+  "contentMisses": 3,
+  "contentUses": 351,
+  "preRotation": 30
+ }
+}
