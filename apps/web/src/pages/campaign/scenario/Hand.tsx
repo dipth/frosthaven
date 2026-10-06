@@ -1,5 +1,5 @@
 /** Online mode: a player's ability cards for their character(s). */
-import { availableAbilityCards, characterKey, handSize, HIDDEN_CARD, type HandState } from '@fh/engine';
+import { availableAbilityCards, cardSlots, characterKey, handSize, HIDDEN_CARD, type HandState } from '@fh/engine';
 import { Character, gameManager, GameState, labelText } from '@fh/ghs-core';
 import type { AbilityCard } from '@fh/ghs-core/vendor/game/model/data/AbilityCard';
 import { useState } from 'react';
@@ -95,6 +95,7 @@ function HandPanel({ character }: { character: Character }) {
         </div>
       )}
       {h.longRest && h.revealed && <LongRest character={character} hand={h} images={images} />}
+      {h.active.length > 0 && <ActiveCards character={character} hand={h} images={images} />}
       <Piles character={character} hand={h} images={images} />
       <BattleGoals character={character} />
     </Panel>
@@ -254,6 +255,51 @@ function ChooseCards({ character, hand, images }: { character: Character; hand: 
           )}
         </>
       )}
+    </div>
+  );
+}
+
+/** Persistent and round bonuses in play, with their use slots to mark. */
+function ActiveCards({ character, hand, images }: { character: Character; hand: HandState; images?: ImageIndex }) {
+  const { send } = useCampaign();
+  const abilities = gameManager.deckData(character).abilities;
+  const card = (id: number) => abilities.find((a) => a.cardId === id);
+  const mark = (cardId: number, delta: 1 | -1) => send('hands.mark', { edition: character.edition, name: character.name, cardId, delta }).catch(() => {});
+  return (
+    <div className="mb-3">
+      <div className="label mb-1">Active</div>
+      <div className="flex flex-wrap gap-2">
+        {hand.active.map((id) => {
+          const slots = cardSlots(card(id));
+          const used = hand.counters?.[id] ?? 0;
+          return (
+            <div key={id} className="grid w-36 content-start gap-1">
+              <CardView image={cardImage(images, character, card(id))} card={card(id)} />
+              {slots.length > 0 && (
+                <div className="flex flex-wrap items-center gap-1" title={`${used}/${slots.length} uses`}>
+                  {slots.map((slot, index) => {
+                    const marked = index < used;
+                    // Only the next free slot or the last marked one can be toggled.
+                    const toggle = index === used ? 1 : index === used - 1 ? -1 : undefined;
+                    return (
+                      <button
+                        key={index}
+                        className={`grid h-5 w-5 place-items-center rounded-full border text-[9px] font-semibold ${marked ? 'border-ice-400 bg-ice-400 text-ink-950' : 'border-ink-500 text-frost-400'} ${toggle ? 'hover:border-ice-300' : 'cursor-default'}`}
+                        disabled={!toggle}
+                        onClick={() => toggle && mark(id, toggle)}
+                        title={`${marked ? 'Unmark' : 'Mark'} use ${index + 1}${slot.xp ? ` (+${slot.xp} XP)` : ''}`}
+                      >
+                        {slot.xp ? `+${slot.xp}` : ''}
+                      </button>
+                    );
+                  })}
+                  {used === slots.length && <span className="text-[10px] text-moss-400">used up</span>}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }

@@ -69,6 +69,8 @@ export interface HandState {
   lost: number[];
   /** Persistent and round bonuses in play. */
   active: number[];
+  /** Use slots marked on active cards (card id -> slots used, see cardSlots). */
+  counters?: Record<number, number>;
   /** The two cards chosen for this round (hidden from others until revealed). */
   selected: number[];
   /** Card whose initiative counts. */

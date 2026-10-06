@@ -1,7 +1,7 @@
 import { bootstrapGhsNode } from '@fh/ghs-core/node';
 import { gameManager } from '@fh/ghs-core';
 import { beforeAll, expect, it } from 'vitest';
-import { executeCommand, HIDDEN_CARD, newCampaignState, projectFor, type CampaignState } from '../src';
+import { cardSlots, executeCommand, HIDDEN_CARD, newCampaignState, projectFor, type CampaignState } from '../src';
 
 const admin = { userId: 'a', isAdmin: true };
 const alice = { userId: 'alice', isAdmin: false };
@@ -67,6 +67,30 @@ it('rests and loses cards to negate damage', () => {
   expect(h.discard).toHaveLength(0);
   state = run(state, 'hands.negateDamage', { ...drifter, from: 'hand', cards: [d] }, alice);
   expect(state.ext.hands!['fh:drifter']!.lost).toContain(d);
+});
+
+it('tracks use slots on active cards and gains their experience', () => {
+  let state = setup();
+  const crushingWeight = gameManager.decksData('fh').find((d) => d.name === 'drifter')!.abilities.find((a) => a.name === 'Crushing Weight')!;
+  expect(cardSlots(crushingWeight).map((s) => s.xp)).toEqual([1, 0, 1, 0, 1, 0]);
+  const id = crushingWeight.cardId!;
+  const mark = (delta: 1 | -1) => (state = run(state, 'hands.mark', { ...drifter, cardId: id, delta }, alice));
+  expect(() => mark(1)).toThrow(/active cards/);
+  state = run(state, 'hands.move', { ...drifter, cardId: id, to: 'active' }, alice);
+  const xp = () => state.ghs.characters.find((x) => x.name === 'drifter')!.experience;
+  mark(1);
+  expect(xp()).toBe(1);
+  mark(1);
+  mark(1);
+  expect(state.ext.hands!['fh:drifter']!.counters![id]).toBe(3);
+  expect(xp()).toBe(2);
+  mark(-1);
+  expect(xp()).toBe(1);
+  expect(() => run(state, 'hands.mark', { ...drifter, cardId: id, delta: 1 }, bob)).toThrow(/another player/);
+  for (let i = 0; i < 4; i++) mark(1);
+  expect(() => mark(1)).toThrow(/already marked/);
+  state = run(state, 'hands.move', { ...drifter, cardId: id, to: 'lost' }, alice);
+  expect(state.ext.hands!['fh:drifter']!.counters![id]).toBeUndefined();
 });
 
 it('hides battle goals and personal quests from other players', () => {

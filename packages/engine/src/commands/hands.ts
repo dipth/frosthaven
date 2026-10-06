@@ -7,6 +7,8 @@
  * here: players do what the card says.
  */
 import { Character, GameState } from '@fh/ghs-core';
+import type { AbilityCard } from '@fh/ghs-core/vendor/game/model/data/AbilityCard';
+import type { Action } from '@fh/ghs-core/vendor/game/model/data/Action';
 import { z } from 'zod';
 import { CommandError, defineCommand, type CommandContext, type CommandDef, type Runtime } from '../runtime';
 import { characterKey, type CampaignState, type CardPile, type HandState } from '../state';
@@ -39,6 +41,25 @@ export function availableAbilityCards(rt: Pick<Runtime, 'gm'>, c: Character) {
 
 export function handSize(rt: Pick<Runtime, 'gm'>, c: Character): number {
   return Number(rt.gm.getCharacterData(c.name, c.edition)?.handSize ?? 0);
+}
+
+function slotsOf(actions: Action[] | undefined): { xp: number }[] {
+  return (actions ?? []).flatMap((action) => {
+    const own = action.type === 'card' && String(action.value).startsWith('slot') ? [{ xp: Number(String(action.value).split(':')[1] ?? 0) }] : [];
+    return [...own, ...slotsOf(action.subActions)];
+  });
+}
+
+/**
+ * The use slots printed on a card (GHS `card` actions `slot`, `slotXp:1`,
+ * `slotStart`, `slotEnd`...), with the experience each slot gives when
+ * marked. Uses the half with the most slots.
+ */
+export function cardSlots(card: AbilityCard | undefined): { xp: number }[] {
+  if (!card) return [];
+  const top = slotsOf(card.actions);
+  const bottom = slotsOf(card.bottomActions);
+  return bottom.length > top.length ? bottom : top;
 }
 
 function initiativeOf(rt: Runtime, c: Character, cardId: number): number {
@@ -173,9 +194,27 @@ const commands: CommandDef[] = [
     run(rt, payload) {
       const c = character(rt, payload);
       const h = hand(rt, c);
-      take(h, payload.cardId);
+      if (take(h, payload.cardId) === 'active' && h.counters) delete h.counters[payload.cardId];
       h[payload.to].push(payload.cardId);
       if (h.leading === payload.cardId) delete h.leading;
+    }
+  }),
+  defineCommand({
+    type: 'hands.mark',
+    payload: ref.extend({ cardId: z.number().int(), delta: z.union([z.literal(1), z.literal(-1)]) }),
+    authorize,
+    run(rt, payload) {
+      const c = character(rt, payload);
+      const h = hand(rt, c);
+      if (!h.active.includes(payload.cardId)) throw new CommandError('Only active cards have use slots', 'invalid_payload');
+      const slots = cardSlots(rt.gm.deckData(c).abilities.find((a) => a.cardId === payload.cardId));
+      const used = h.counters?.[payload.cardId] ?? 0;
+      const next = used + payload.delta;
+      if (next < 0 || next > slots.length) throw new CommandError(next < 0 ? 'No slots are marked' : 'Every slot is already marked');
+      (h.counters ??= {})[payload.cardId] = next;
+      // Marking a slot with an experience icon gains that experience; unmarking takes it back.
+      const xp = payload.delta > 0 ? slots[next - 1]!.xp : -slots[used - 1]!.xp;
+      if (xp) c.experience = Math.max(0, c.experience + xp);
     }
   }),
   defineCommand({
