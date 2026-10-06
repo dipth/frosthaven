@@ -235,16 +235,38 @@ export function Board({ onMenu }: { onMenu(refs: EntityRef[]): void }) {
     };
   }, [pan]);
 
-  const onWheel = (e: React.WheelEvent) => {
-    const rect = svgRef.current!.getBoundingClientRect();
-    const mx = e.clientX - rect.left;
-    const my = e.clientY - rect.top;
-    const factor = Math.exp(-e.deltaY * 0.0015);
-    setView((v) => {
-      const k = Math.min(3, Math.max(0.1, v.k * factor));
-      return { k, x: mx - ((mx - v.x) * k) / v.k, y: my - ((my - v.y) * k) / v.k };
-    });
-  };
+  // Wheel zoom needs Ctrl/⌘ held (trackpad pinch sends ctrlKey too), so scrolling
+  // the page past the map doesn't zoom it. Native listener: React's is passive and
+  // can't stop the browser's own Ctrl+wheel page zoom.
+  const [zoomHint, setZoomHint] = useState(false);
+  useEffect(() => {
+    const svg = svgRef.current;
+    if (!svg) return;
+    let hintTimer: ReturnType<typeof setTimeout> | undefined;
+    const onWheel = (e: WheelEvent) => {
+      if (!e.ctrlKey && !e.metaKey) {
+        setZoomHint(true);
+        clearTimeout(hintTimer);
+        hintTimer = setTimeout(() => setZoomHint(false), 1200);
+        return;
+      }
+      e.preventDefault();
+      setZoomHint(false);
+      const rect = svg.getBoundingClientRect();
+      const mx = e.clientX - rect.left;
+      const my = e.clientY - rect.top;
+      const factor = Math.exp(-e.deltaY * 0.0015);
+      setView((v) => {
+        const k = Math.min(3, Math.max(0.1, v.k * factor));
+        return { k, x: mx - ((mx - v.x) * k) / v.k, y: my - ((my - v.y) * k) / v.k };
+      });
+    };
+    svg.addEventListener('wheel', onWheel, { passive: false });
+    return () => {
+      svg.removeEventListener('wheel', onWheel);
+      clearTimeout(hintTimer);
+    };
+  }, [board]);
 
   const placeOnSpawns = () => {
     if (!board) return;
@@ -322,7 +344,6 @@ export function Board({ onMenu }: { onMenu(refs: EntityRef[]): void }) {
         <svg
           ref={svgRef}
           className="h-full w-full touch-none select-none"
-          onWheel={onWheel}
           onPointerDown={(e) => setPan({ x: e.clientX, y: e.clientY, vx: view.x, vy: view.y })}
         >
           <defs>
@@ -364,6 +385,13 @@ export function Board({ onMenu }: { onMenu(refs: EntityRef[]): void }) {
             )}
           </g>
         </svg>
+        {zoomHint && (
+          <div className="pointer-events-none absolute inset-0 grid place-items-center bg-ink-950/40">
+            <span className="rounded-lg bg-ink-900/90 px-3 py-1.5 text-sm text-frost-100">
+              Hold {/Mac|iPhone|iPad/.test(navigator.platform) ? '⌘' : 'Ctrl'} and scroll to zoom the map
+            </span>
+          </div>
+        )}
         <div className="absolute right-2 top-2 flex gap-1">
           {me.role === 'admin' && (
             <button
