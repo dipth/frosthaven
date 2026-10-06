@@ -3,7 +3,7 @@ import { availableAbilityCards, cardSlots, characterKey, handSize, HIDDEN_CARD, 
 import { Character, gameManager, GameState, labelText } from '@fh/ghs-core';
 import type { AbilityCard } from '@fh/ghs-core/vendor/game/model/data/AbilityCard';
 import { useState } from 'react';
-import { Panel } from '../../../components/ui';
+import { Modal, Panel } from '../../../components/ui';
 import { assetUrl, slug, useImages, type ImageIndex } from '../../../lib/board-data';
 import { useCampaign } from '../../../lib/campaign-store';
 import { useMe } from '../../../lib/me';
@@ -142,30 +142,44 @@ function BattleGoals({ character }: { character: Character }) {
   );
 }
 
+/** A card in a pile. Without an onClick of its own, clicking a known card opens a larger view of it. */
 function CardView({ image, card, selected, leading, onClick }: { image?: string; card?: AbilityCard; selected?: boolean; leading?: boolean; onClick?(): void }) {
+  const [zoomed, setZoomed] = useState(false);
+  const zoomable = !onClick && !!card;
   return (
-    <button
-      className={`relative overflow-hidden rounded-lg border text-left ${selected ? 'border-ice-400 ring-2 ring-ice-400' : 'border-ink-600'} ${onClick ? 'hover:border-ice-300' : 'cursor-default'}`}
-      onClick={onClick}
-      title={card ? `${card.name} (${card.initiative})` : 'Hidden card'}
-    >
-      {image ? (
-        <img src={assetUrl(image)} alt={card?.name} className="block w-full" loading="lazy" />
-      ) : (
-        <div className="grid aspect-[2/3] w-full place-items-center bg-ink-850 p-2 text-center text-xs">
-          {card ? (
-            <span>
-              {card.name}
-              <br />
-              <span className="font-mono text-lg">{card.initiative}</span>
-            </span>
+    <>
+      <button
+        className={`relative overflow-hidden rounded-lg border text-left ${selected ? 'border-ice-400 ring-2 ring-ice-400' : 'border-ink-600'} ${onClick || zoomable ? 'hover:border-ice-300' : 'cursor-default'}`}
+        onClick={onClick ?? (zoomable ? () => setZoomed(true) : undefined)}
+        title={card ? `${card.name} (${card.initiative})` : 'Hidden card'}
+      >
+        {image ? (
+          <img src={assetUrl(image)} alt={card?.name} className="block w-full" loading="lazy" />
+        ) : (
+          <div className="grid aspect-[2/3] w-full place-items-center bg-ink-850 p-2 text-center text-xs">
+            {card ? (
+              <span>
+                {card.name}
+                <br />
+                <span className="font-mono text-lg">{card.initiative}</span>
+              </span>
+            ) : (
+              '?'
+            )}
+          </div>
+        )}
+        {leading && <span className="absolute left-1 top-1 rounded bg-ice-500 px-1 text-[10px] font-semibold text-ink-950">initiative</span>}
+      </button>
+      {zoomed && card && (
+        <Modal title={`${card.name} (${card.initiative})`} onClose={() => setZoomed(false)}>
+          {image ? (
+            <img src={assetUrl(image)} alt={card.name} className="mx-auto block max-h-[75vh] w-auto rounded-lg" />
           ) : (
-            '?'
+            <p className="text-sm text-frost-400">No card image available.</p>
           )}
-        </div>
+        </Modal>
       )}
-      {leading && <span className="absolute left-1 top-1 rounded bg-ice-500 px-1 text-[10px] font-semibold text-ink-950">initiative</span>}
-    </button>
+    </>
   );
 }
 
