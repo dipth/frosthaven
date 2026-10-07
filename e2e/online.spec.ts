@@ -67,7 +67,7 @@ test('card choices stay secret until revealed, moves sync, reconnects resync', a
 
   // A standee moved by Bob shows up for Alice.
   await sendCommands(bob, id, [['board.move', { ref: { kind: 'character', ...blinkblade }, hex: { x: 3, y: -2 } }]]);
-  await expect(alice.locator('svg g title', { hasText: /^Blinkblade/ })).toHaveCount(1);
+  await expect(alice.locator('svg g[aria-label^="Blinkblade"]')).toHaveCount(1);
 
   // Alice drops offline; Bob keeps playing; Alice catches up on reconnect.
   await alice.context().setOffline(true);
