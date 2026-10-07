@@ -1,7 +1,7 @@
 # Private Frosthaven campaign app. Set the app name and region before the first deploy:
 #   fly apps create <name> && fly volumes create frosthaven_data --size 5 --region <region>
 #   fly secrets set DATABASE_URL=<neon pooled url> SESSION_SECRET=$(openssl rand -hex 32)
-app = "frosthaven-CHANGE-ME"
+app = "frosthaven-just-the-tips"
 primary_region = "fra"
 
 [build]
