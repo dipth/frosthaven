@@ -5,7 +5,7 @@ A private, realtime, browser-based companion and virtual tabletop for our Frosth
 - **Physical**: a Gloomhaven Secretariat replacement at the table.
 - **Online**: an assisted virtual tabletop for remote sessions.
 
-Campaigns can be imported from and exported back to [Gloomhaven Secretariat](https://github.com/Lurkars/gloomhavensecretariat). This repository is private and the app is invite-only. Do not publish either; see [Licensing and data sources](#licensing-and-data-sources).
+Campaigns can be imported from and exported back to [Gloomhaven Secretariat](https://github.com/Lurkars/gloomhavensecretariat). The source is public under AGPL-3.0; a running instance is invite-only and serves game content only to signed-in users. See [Licensing and data sources](#licensing-and-data-sources).
 
 ## Architecture
 
@@ -121,7 +121,9 @@ Other tasks: `mise run test`, `mise run typecheck`, `mise run db:generate` (afte
 
 ## Licensing and data sources
 
-- **Gloomhaven Secretariat** (`packages/ghs-core/src/vendor`, plus data via `data:sync`) is AGPL-3.0 © Lurkars. We run a modified copy as a network service, so players must be able to get the source; the group has access to this repository. See `packages/ghs-core/src/vendor/LICENSE`.
+- **This project** is licensed under the [GNU AGPL-3.0](LICENSE), because it includes and modifies Gloomhaven Secretariat. If you run a modified copy as a network service, you must offer its source to your users.
+- **Gloomhaven Secretariat** (`packages/ghs-core/src/vendor`, plus data via `data:sync`) is AGPL-3.0 © Lurkars. See `packages/ghs-core/src/vendor/LICENSE`.
+- **No game content is committed.** Secretariat data, fhtts layouts and Worldhaven images are fetched at build time or into the server's volume.
 - **fhtts** scenario layouts are CC BY-NC-SA 4.0 © gudyfr.
 - **Worldhaven** images are licensed by Cephalofair to the Worldhaven maintainer only. We fetch them for strictly private use, never commit or redistribute them, and serve them only behind auth.
 - Frosthaven, Gloomhaven and all related content are © Cephalofair Games.

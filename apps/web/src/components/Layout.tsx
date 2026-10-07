@@ -31,6 +31,12 @@ export function Layout({ children }: { children: ReactNode }) {
         </nav>
       </header>
       <main className="min-w-0 flex-1 pb-12">{children}</main>
+      {/* AGPL-3.0 section 13: offer the source to everyone using the app. */}
+      <footer className="py-4 text-center text-xs text-frost-500">
+        <a href="https://github.com/dipth/frosthaven" target="_blank" rel="noreferrer" className="hover:text-frost-300">
+          Source code (AGPL-3.0)
+        </a>
+      </footer>
     </div>
   );
 }
