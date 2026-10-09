@@ -116,7 +116,7 @@ export function DeckEditor({ character, cards, onChange, disabled }: { character
                 card={a}
                 image={cardImage(images, character, a)}
                 muted={disabled || full}
-                onClick={disabled ? undefined : () => !full && onChange([...cards, a.cardId!])}
+                onClick={disabled || full ? undefined : () => onChange([...cards, a.cardId!])}
               />
             ))}
           </div>

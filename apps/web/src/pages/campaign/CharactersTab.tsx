@@ -487,6 +487,7 @@ function LevelUpPicks({ character }: { character: Character }) {
               <button
                 className="hover:text-blood-400"
                 title="Undo this pick"
+                aria-label={`Undo picking ${card!.name}`}
                 onClick={() => confirm(`Take ${card!.name} back out of ${characterName(character)}'s cards?`) && send('character.unpickCard', { ...ref, cardId: card!.cardId }).catch(() => {})}
               >
                 ×

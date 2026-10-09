@@ -126,6 +126,7 @@ it('stores a deck between scenarios and plays it', () => {
 
   state = run(state, 'scenario.set', { index: '1' });
   expect(() => run(state, 'deck.set', { ...drifter, cards: deck.slice(1) }, alice)).toThrow(/between scenarios/);
+  expect(() => run(state, 'hands.setup', { ...drifter, cards: deck.slice(0, 1) }, alice)).toThrow(/at least two cards/);
   state = run(state, 'hands.setup', drifter, alice);
   expect(state.ext.hands!['fh:drifter']!.hand).toEqual(deck);
   expect(state.ext.scenarioDecks).toBeUndefined();

@@ -143,6 +143,8 @@ const commands: CommandDef[] = [
         if (!stored?.length) throw new CommandError(`${rt.gm.characterManager.characterName(c)} has no stored deck yet`);
         cards = stored;
       }
+      // Each round takes two cards (or a long rest with two discarded).
+      if (cards.length < 2) throw new CommandError('A deck needs at least two cards');
       (rt.ext.hands ??= {})[key] = { hand: [...cards], discard: [], lost: [], active: [], selected: [] };
       rt.log(`${rt.gm.characterManager.characterName(c)} took ${payload.cards ? 'a temporary deck' : 'their stored deck'} of ${cards.length} cards`);
     }

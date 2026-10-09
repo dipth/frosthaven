@@ -1,5 +1,5 @@
 /** Online mode: a player's ability cards for their character(s). */
-import { cardSlots, characterKey, handSize, HIDDEN_CARD, storedDeck, type HandState } from '@fh/engine';
+import { availableAbilityCards, cardSlots, characterKey, handSize, HIDDEN_CARD, storedDeck, type HandState } from '@fh/engine';
 import { Character, gameManager, GameState, labelText } from '@fh/ghs-core';
 import { useState } from 'react';
 import { CardView, cardImage, DeckEditor } from '../../../components/AbilityCards';
@@ -141,7 +141,11 @@ function ChooseDeck({ character }: { character: Character }) {
   const { state, send } = useCampaign();
   const ref = { edition: character.edition, name: character.name };
   const stored = storedDeck({ gm: gameManager }, state!.ext, character);
-  const previous = state!.ext.scenarioDecks?.[characterKey(character)];
+  const key = characterKey(character);
+  // A card picked at level-up may have been taken back since the temporary deck was made.
+  const available = availableAbilityCards({ gm: gameManager }, character).map((a) => a.cardId!);
+  const previous = state!.ext.scenarioDecks?.[key]?.filter((id) => available.includes(id));
+  const saved = !!state!.ext.decks?.[key];
   const size = handSize({ gm: gameManager }, character);
   const [temporary, setTemporary] = useState<number[]>();
   const name = gameManager.characterManager.characterName(character);
@@ -162,7 +166,7 @@ function ChooseDeck({ character }: { character: Character }) {
           <span className="text-frost-400">
             {temporary.length}/{size}
           </span>
-          <button className="btn btn-primary ml-auto" disabled={!temporary.length} onClick={() => send('hands.setup', { ...ref, cards: temporary }).catch(() => {})}>
+          <button className="btn btn-primary ml-auto" disabled={temporary.length < 2} onClick={() => send('hands.setup', { ...ref, cards: temporary }).catch(() => {})}>
             Play this deck
           </button>
         </div>
@@ -173,10 +177,14 @@ function ChooseDeck({ character }: { character: Character }) {
   return (
     <Panel title={`${name} · which deck?`}>
       <div className="grid gap-2 sm:grid-cols-2">
-        <button className="btn grid gap-0.5 p-3 text-left" disabled={!stored?.length} onClick={() => send('hands.setup', ref).catch(() => {})}>
+        <button className="btn grid gap-0.5 p-3 text-left" disabled={(stored?.length ?? 0) < 2} onClick={() => send('hands.setup', ref).catch(() => {})}>
           <span className="font-medium">Stored deck</span>
           <span className="text-xs text-frost-400">
-            {stored?.length ? `${stored.length}/${size} cards, as saved on the character page` : 'No stored deck yet: build one on the character page, or pick a temporary deck'}
+            {!stored?.length
+              ? 'No stored deck yet: build one on the character page, or pick a temporary deck'
+              : saved
+                ? `${stored.length}/${size} cards, as saved on the character page`
+                : `All ${stored.length} unlocked cards (no deck saved on the character page yet)`}
           </span>
         </button>
         <button className="btn grid gap-0.5 p-3 text-left" onClick={() => setTemporary(previous ?? stored ?? [])}>
