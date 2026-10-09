@@ -1,7 +1,7 @@
 import { availablePerks, cardsToPick, characterKey, describePerk, handSize, isClassUnlocked, isCrossoverCharacter, playableClasses, storedDeck } from '@fh/engine';
 import { Character, gameManager, labelText } from '@fh/ghs-core';
 import { useEffect, useMemo, useState } from 'react';
-import { cardImage, CardView, DeckEditor } from '../../components/AbilityCards';
+import { cardImage, CardView, DECK_GRID, DeckEditor } from '../../components/AbilityCards';
 import { Boxes, NotesField, Panel, StatRow, Stepper } from '../../components/ui';
 import { api, type Me } from '../../lib/api';
 import { useImages } from '../../lib/board-data';
@@ -466,7 +466,7 @@ function LevelUpPicks({ character }: { character: Character }) {
               pick {picks.count} card{picks.count === 1 ? '' : 's'} of level {picks.maxLevel} or lower
             </span>
           </div>
-          <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-6">
+          <div className={DECK_GRID}>
             {choices.map((card) => (
               <CardView
                 key={card.cardId}

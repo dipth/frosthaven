@@ -70,6 +70,9 @@ export function CardView({
   );
 }
 
+/** Card grid for deck building: cards at least 200px wide so their small print is readable. */
+export const DECK_GRID = 'grid grid-cols-[repeat(auto-fill,minmax(min(200px,45%),1fr))] gap-3';
+
 /**
  * The cards in a deck and the character's other unlocked cards. Clicking a
  * deck card takes it out, clicking another card puts it in while there's room.
@@ -81,7 +84,6 @@ export function DeckEditor({ character, cards, onChange, disabled }: { character
   const deck = available.filter((a) => cards.includes(a.cardId!));
   const others = available.filter((a) => !cards.includes(a.cardId!));
   const full = size > 0 && cards.length >= size;
-  const grid = 'grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-6';
   return (
     <div className="grid gap-3">
       <div>
@@ -92,7 +94,7 @@ export function DeckEditor({ character, cards, onChange, disabled }: { character
           {!disabled && deck.length > 0 && <span className="text-xs text-frost-400">click a card to take it out</span>}
         </div>
         {deck.length ? (
-          <div className={grid}>
+          <div className={DECK_GRID}>
             {deck.map((a) => (
               <CardView key={a.cardId} card={a} image={cardImage(images, character, a)} onClick={disabled ? undefined : () => onChange(cards.filter((id) => id !== a.cardId))} />
             ))}
@@ -107,7 +109,7 @@ export function DeckEditor({ character, cards, onChange, disabled }: { character
             <span className="label">Other unlocked cards</span>
             {!disabled && <span className="text-xs text-frost-400">{full ? 'take a card out to make room' : 'click a card to add it'}</span>}
           </div>
-          <div className={grid}>
+          <div className={DECK_GRID}>
             {others.map((a) => (
               <CardView
                 key={a.cardId}
