@@ -1,8 +1,10 @@
-import { availablePerks, characterKey, describePerk, isClassUnlocked, isCrossoverCharacter, playableClasses } from '@fh/engine';
+import { availablePerks, cardsToPick, characterKey, describePerk, handSize, isClassUnlocked, isCrossoverCharacter, playableClasses, storedDeck } from '@fh/engine';
 import { Character, gameManager, labelText } from '@fh/ghs-core';
 import { useEffect, useMemo, useState } from 'react';
+import { cardImage, CardView, DECK_GRID, DeckEditor } from '../../components/AbilityCards';
 import { Boxes, NotesField, Panel, StatRow, Stepper } from '../../components/ui';
 import { api, type Me } from '../../lib/api';
+import { useImages } from '../../lib/board-data';
 import { useCampaign } from '../../lib/campaign-store';
 import { characterName, ghsText, lootName } from '../../lib/labels';
 import { useMe } from '../../lib/me';
@@ -239,6 +241,8 @@ function CharacterSheet({ character, users }: { character: Character; users: Me[
         </Panel>
       </div>
 
+      <DeckPanel character={character} canEdit={canEdit} />
+
       <Downtime character={character} canEdit={canEdit} run={run} />
 
       <Panel title="Notes">
@@ -400,5 +404,98 @@ function RetiredPanel() {
         ))}
       </ul>
     </Panel>
+  );
+}
+
+/** The stored deck the character takes into scenarios; changed between scenarios. */
+function DeckPanel({ character, canEdit }: { character: Character; canEdit: boolean }) {
+  const { state, send } = useCampaign();
+  const me = useMe();
+  const key = characterKey(character);
+  const owner = state!.ext.characterOwners[key];
+  const hidden = state!.ext.mode === 'online' && !!owner && owner !== me.id;
+  const stored = storedDeck({ gm: gameManager }, state!.ext, character) ?? [];
+  const [cards, setCards] = useState(stored);
+  useEffect(() => setCards(stored), [stored.join()]); // eslint-disable-line react-hooks/exhaustive-deps
+  const inScenario = !!gameManager.game.scenario;
+  const size = handSize({ gm: gameManager }, character);
+  const change = (next: number[]) => {
+    setCards(next);
+    send('deck.set', { edition: character.edition, name: character.name, cards: next }).catch(() => setCards(stored));
+  };
+  return (
+    <Panel title="Deck" actions={!hidden && <span className="text-sm text-frost-400">{cards.length}/{size} cards</span>}>
+      {hidden ? (
+        <p className="text-sm text-frost-400">Only this character's player can see their deck.</p>
+      ) : (
+        <>
+          {inScenario ? (
+            <p className="mb-3 text-xs text-frost-400">The stored deck is locked during a scenario. A temporary deck can be picked when the scenario starts.</p>
+          ) : (
+            !state!.ext.decks?.[key] &&
+            canEdit && <p className="mb-3 text-xs text-frost-400">No deck saved yet. Pick the cards to take into scenarios; you can still swap them for a single scenario.</p>
+          )}
+          {canEdit && <LevelUpPicks character={character} />}
+          <DeckEditor character={character} cards={cards} onChange={change} disabled={!canEdit || inScenario} />
+        </>
+      )}
+    </Panel>
+  );
+}
+
+/**
+ * Level-up card picks (downtime): one card per level above 1, of the new
+ * level or lower. Picked cards join the other unlocked cards.
+ */
+function LevelUpPicks({ character }: { character: Character }) {
+  const { send } = useCampaign();
+  const images = useImages();
+  const ref = { edition: character.edition, name: character.name };
+  const abilities = gameManager.deckData(character).abilities;
+  const picks = cardsToPick(character);
+  const picked = character.progress.deck.map((i) => abilities[i]).filter((a) => !!a);
+  const choices = abilities.filter((a, i) => typeof a.level === 'number' && a.level > 1 && a.level <= picks.maxLevel && !character.progress.deck.includes(i));
+  if (!picks.count && !picked.length) return null;
+  return (
+    <div className="mb-4 grid gap-2 border-b border-ink-700 pb-4">
+      {picks.count > 0 && (
+        <div>
+          <div className="mb-1 flex items-baseline gap-2">
+            <span className="label">Level-up pick</span>
+            <span className="text-xs text-moss-400">
+              pick {picks.count} card{picks.count === 1 ? '' : 's'} of level {picks.maxLevel} or lower
+            </span>
+          </div>
+          <div className={DECK_GRID}>
+            {choices.map((card) => (
+              <CardView
+                key={card.cardId}
+                card={card}
+                image={cardImage(images, character, card)}
+                onClick={() => confirm(`Add ${card.name} (level ${card.level}) to ${characterName(character)}'s cards?`) && send('character.pickCard', { ...ref, cardId: card.cardId }).catch(() => {})}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+      {picked.length > 0 && (
+        <div className="flex flex-wrap items-center gap-1 text-xs text-frost-400">
+          <span>Picked at level-up:</span>
+          {picked.map((card) => (
+            <span key={card!.cardId} className="flex items-center gap-1 rounded bg-ink-850 px-1.5 py-0.5">
+              {card!.name} <span className="text-frost-500">lvl {card!.level}</span>
+              <button
+                className="hover:text-blood-400"
+                title="Undo this pick"
+                aria-label={`Undo picking ${card!.name}`}
+                onClick={() => confirm(`Take ${card!.name} back out of ${characterName(character)}'s cards?`) && send('character.unpickCard', { ...ref, cardId: card!.cardId }).catch(() => {})}
+              >
+                ×
+              </button>
+            </span>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }

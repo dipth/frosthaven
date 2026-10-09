@@ -20,7 +20,7 @@ export * from './ghs-ui/buildings';
 export * from './ghs-ui/brew';
 export * from './ghs-ui/enhancements';
 export * from './narration';
-export { availableAbilityCards, cardSlots, handSize } from './commands/hands';
+export { availableAbilityCards, cardSlots, handSize, storedDeck } from './commands/hands';
 export { boardKey } from './commands/board-state';
 export * from './hex';
 export * from './books';

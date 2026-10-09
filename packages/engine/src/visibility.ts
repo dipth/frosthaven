@@ -8,7 +8,7 @@ const hide = (cards: number[]) => cards.map(() => HIDDEN_CARD);
 /**
  * The view of the campaign a given user may see. In online mode, other
  * players' hands and unrevealed card choices are reduced to counts, and their
- * battle goals and personal quests are hidden. Characters without a player
+ * decks, battle goals and personal quests are hidden. Characters without a player
  * are visible to everyone (e.g. a shared table device).
  */
 export function projectFor(state: CampaignState, userId: string): CampaignState {
@@ -38,5 +38,12 @@ export function projectFor(state: CampaignState, userId: string): CampaignState 
     const progress = c.progress ? { ...c.progress, personalQuest: '', personalQuestProgress: [] } : c.progress;
     return { ...c, battleGoals: [], progress };
   });
-  return { ghs: { ...state.ghs, characters }, ext: { ...state.ext, ...(hands ? { hands } : {}) } };
+  // Decks give away what's in a hand.
+  const own = (decks: Record<string, number[]> | undefined) => decks && Object.fromEntries(Object.entries(decks).filter(([key]) => !hiddenFrom(key)));
+  const decks = own(state.ext.decks);
+  const scenarioDecks = own(state.ext.scenarioDecks);
+  return {
+    ghs: { ...state.ghs, characters },
+    ext: { ...state.ext, ...(hands ? { hands } : {}), ...(decks ? { decks } : {}), ...(scenarioDecks ? { scenarioDecks } : {}) }
+  };
 }

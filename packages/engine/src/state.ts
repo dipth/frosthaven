@@ -38,6 +38,13 @@ export interface ExtState {
   outpostPhase?: OutpostPhase;
   /** Recent Forteller narration cues not yet dismissed by the narrator. */
   narration?: NarrationCue[];
+  /** Each character's stored deck of ability cards (key `edition:name`, GHS cardIds), changed between scenarios. */
+  decks?: Record<string, number[]>;
+  /**
+   * Temporary decks picked for the current scenario instead of the stored
+   * one. Kept when the scenario is reset, dropped when it closes.
+   */
+  scenarioDecks?: Record<string, number[]>;
   /** Online mode: each character's ability cards during a scenario (key `edition:name`). */
   hands?: Record<string, HandState>;
   /** Online mode: what's on the hex map of the current scenario. */

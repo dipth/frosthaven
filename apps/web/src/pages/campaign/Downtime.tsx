@@ -1,13 +1,12 @@
 /**
- * Downtime for one character: shop (buy/craft), brewing, enhancing, card
- * picks at level-up and donations. After GHS items dialog, brew dialog,
- * ability cards dialog and enhancements (AGPL-3.0).
+ * Downtime for one character: shop (buy/craft), brewing, enhancing and
+ * donations. After GHS items dialog, brew dialog and enhancements (AGPL-3.0).
+ * Card picks at level-up are in the Deck panel.
  */
 import {
   BREW_HERBS,
   brewingHerbs,
   brewResult,
-  cardsToPick,
   characterKey,
   enhancementCost,
   suggestedHerbSpend,
@@ -24,17 +23,16 @@ import { useCampaign } from '../../lib/campaign-store';
 type Run = (type: string, payload?: object) => void;
 
 export function Downtime({ character, canEdit, run }: { character: Character; canEdit: boolean; run: Run }) {
-  const [tab, setTab] = useState<'shop' | 'brew' | 'enhance' | 'cards'>('shop');
-  const picks = cardsToPick(character);
+  const [tab, setTab] = useState<'shop' | 'brew' | 'enhance'>('shop');
   const temple = gameManager.game.party.buildings.some((b) => b.name === 'temple' && b.level && b.state !== 'wrecked');
   return (
     <Panel
       title="Downtime"
       actions={
         <div className="flex flex-wrap gap-1">
-          {(['shop', 'brew', 'enhance', 'cards'] as const).map((t) => (
+          {(['shop', 'brew', 'enhance'] as const).map((t) => (
             <button key={t} className={`btn px-2 py-1 text-xs ${tab === t ? 'border-ice-400' : ''}`} onClick={() => setTab(t)}>
-              {t === 'cards' ? `Cards${picks.count ? ` (${picks.count} to pick)` : ''}` : t[0]!.toUpperCase() + t.slice(1)}
+              {t[0]!.toUpperCase() + t.slice(1)}
             </button>
           ))}
         </div>
@@ -44,7 +42,6 @@ export function Downtime({ character, canEdit, run }: { character: Character; ca
       {tab === 'shop' && <Shop character={character} canEdit={canEdit} run={run} />}
       {tab === 'brew' && <Brew character={character} canEdit={canEdit} />}
       {tab === 'enhance' && <Enhance character={character} canEdit={canEdit} run={run} />}
-      {tab === 'cards' && <Cards character={character} canEdit={canEdit} run={run} />}
       {temple && (
         <div className="mt-4 flex items-center gap-2 border-t border-ink-700 pt-3 text-sm">
           <span className="text-frost-300">Temple donations: {character.progress.donations}</span>
@@ -351,56 +348,6 @@ function Enhance({ character, canEdit, run }: { character: Character; canEdit: b
                 </span>
                 {canEdit && (
                   <button className="text-xs text-frost-400 hover:text-blood-400" onClick={() => confirm('Remove this enhancement record?') && run('character.removeEnhancement', { index })}>
-                    remove
-                  </button>
-                )}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-    </div>
-  );
-}
-
-function Cards({ character, canEdit, run }: { character: Character; canEdit: boolean; run: Run }) {
-  const abilities = gameManager.deckData(character).abilities;
-  const picks = cardsToPick(character);
-  const picked = character.progress.deck.map((i) => abilities[i]).filter((a) => !!a);
-  const choices = abilities.filter(
-    (a, i) => typeof a.level === 'number' && a.level > 1 && a.level <= picks.maxLevel && !character.progress.deck.includes(i)
-  );
-  return (
-    <div className="grid gap-3 text-sm">
-      <p className="text-frost-400">
-        Level {character.level}: {picked.length} card{picked.length === 1 ? '' : 's'} added above level 1.
-        {picks.count > 0 && ` Pick ${picks.count} more (level ${picks.maxLevel} or lower).`}
-      </p>
-      {picks.count > 0 && (
-        <ul className="grid gap-1">
-          {choices.map((card) => (
-            <li key={card.cardId} className="flex items-center gap-2">
-              <span className="w-10 text-xs text-frost-400">lvl {card.level}</span>
-              <span className="flex-1">
-                {card.name} <span className="text-frost-400">({card.cardId})</span>
-              </span>
-              <button className="btn px-2 py-0.5 text-xs" disabled={!canEdit} onClick={() => run('character.pickCard', { cardId: card.cardId })}>
-                Add to deck
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
-      {picked.length > 0 && (
-        <div>
-          <div className="label mb-1">Added cards</div>
-          <ul className="grid gap-0.5">
-            {picked.map((card) => (
-              <li key={card!.cardId} className="flex items-center gap-2">
-                <span className="w-10 text-xs text-frost-400">lvl {card!.level}</span>
-                <span className="flex-1">{card!.name}</span>
-                {canEdit && (
-                  <button className="text-xs text-frost-400 hover:text-blood-400" onClick={() => run('character.unpickCard', { cardId: card!.cardId })}>
                     remove
                   </button>
                 )}

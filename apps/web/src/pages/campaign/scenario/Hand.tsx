@@ -1,21 +1,12 @@
 /** Online mode: a player's ability cards for their character(s). */
-import { availableAbilityCards, cardSlots, characterKey, handSize, HIDDEN_CARD, type HandState } from '@fh/engine';
+import { availableAbilityCards, cardSlots, characterKey, handSize, HIDDEN_CARD, storedDeck, type HandState } from '@fh/engine';
 import { Character, gameManager, GameState, labelText } from '@fh/ghs-core';
-import type { AbilityCard } from '@fh/ghs-core/vendor/game/model/data/AbilityCard';
 import { useState } from 'react';
-import { Modal, Panel } from '../../../components/ui';
-import { assetUrl, slug, useImages, type ImageIndex } from '../../../lib/board-data';
+import { CardView, cardImage, DeckEditor } from '../../../components/AbilityCards';
+import { Panel } from '../../../components/ui';
+import { useImages, type ImageIndex } from '../../../lib/board-data';
 import { useCampaign } from '../../../lib/campaign-store';
 import { useMe } from '../../../lib/me';
-
-function editionPrefix(edition: string) {
-  return edition === 'gh' ? 'gh' : edition === 'jotl' ? 'jotl' : edition === 'fc' ? 'fc' : 'fh';
-}
-
-function cardImage(images: ImageIndex | undefined, character: Character, card: AbilityCard | undefined) {
-  if (!images || !card?.name) return undefined;
-  return images.abilityCards[`${editionPrefix(character.edition)}:${slug(character.name)}`]?.[slug(card.name)];
-}
 
 export function Hands() {
   const { state } = useCampaign();
@@ -69,7 +60,7 @@ function HandPanel({ character }: { character: Character }) {
   const card = (id: number) => abilities.find((a) => a.cardId === id);
   const name = gameManager.characterManager.characterName(character);
 
-  if (!h) return <PickHand character={character} images={images} />;
+  if (!h) return <ChooseDeck character={character} />;
 
   const draw = gameManager.game.state === GameState.draw;
   return (
@@ -142,70 +133,63 @@ function BattleGoals({ character }: { character: Character }) {
   );
 }
 
-/** A card in a pile. Without an onClick of its own, clicking a known card opens a larger view of it. */
-function CardView({ image, card, selected, leading, onClick }: { image?: string; card?: AbilityCard; selected?: boolean; leading?: boolean; onClick?(): void }) {
-  const [zoomed, setZoomed] = useState(false);
-  const zoomable = !onClick && !!card;
-  return (
-    <>
-      <button
-        className={`relative overflow-hidden rounded-lg border text-left ${selected ? 'border-ice-400 ring-2 ring-ice-400' : 'border-ink-600'} ${onClick || zoomable ? 'hover:border-ice-300' : 'cursor-default'}`}
-        onClick={onClick ?? (zoomable ? () => setZoomed(true) : undefined)}
-        title={card ? `${card.name} (${card.initiative})` : 'Hidden card'}
-      >
-        {image ? (
-          <img src={assetUrl(image)} alt={card?.name} className="block w-full" loading="lazy" />
-        ) : (
-          <div className="grid aspect-[2/3] w-full place-items-center bg-ink-850 p-2 text-center text-xs">
-            {card ? (
-              <span>
-                {card.name}
-                <br />
-                <span className="font-mono text-lg">{card.initiative}</span>
-              </span>
-            ) : (
-              '?'
-            )}
-          </div>
-        )}
-        {leading && <span className="absolute left-1 top-1 rounded bg-ice-500 px-1 text-[10px] font-semibold text-ink-950">initiative</span>}
-      </button>
-      {zoomed && card && (
-        <Modal title={`${card.name} (${card.initiative})`} onClose={() => setZoomed(false)}>
-          {image ? (
-            <img src={assetUrl(image)} alt={card.name} className="mx-auto block max-h-[75vh] w-auto rounded-lg" />
-          ) : (
-            <p className="text-sm text-frost-400">No card image available.</p>
-          )}
-        </Modal>
-      )}
-    </>
-  );
-}
-
-function PickHand({ character, images }: { character: Character; images?: ImageIndex }) {
-  const { send } = useCampaign();
-  const available = availableAbilityCards({ gm: gameManager }, character);
+/**
+ * Before the scenario: play the stored deck, or pick a temporary one for this
+ * scenario only. After a reset, the temporary picks from before are offered again.
+ */
+function ChooseDeck({ character }: { character: Character }) {
+  const { state, send } = useCampaign();
+  const ref = { edition: character.edition, name: character.name };
+  const stored = storedDeck({ gm: gameManager }, state!.ext, character);
+  const key = characterKey(character);
+  // A card picked at level-up may have been taken back since the temporary deck was made.
+  const available = availableAbilityCards({ gm: gameManager }, character).map((a) => a.cardId!);
+  const previous = state!.ext.scenarioDecks?.[key]?.filter((id) => available.includes(id));
+  const saved = !!state!.ext.decks?.[key];
   const size = handSize({ gm: gameManager }, character);
-  const [chosen, setChosen] = useState<number[]>(() => (available.length <= size ? available.map((a) => a.cardId!) : []));
-  const toggle = (id: number) => setChosen(chosen.includes(id) ? chosen.filter((x) => x !== id) : chosen.length < size ? [...chosen, id] : chosen);
+  const [temporary, setTemporary] = useState<number[]>();
+  const name = gameManager.characterManager.characterName(character);
+
+  if (temporary) {
+    return (
+      <Panel
+        title={`${name} · temporary deck`}
+        actions={
+          <button className="btn px-2 py-1 text-xs" onClick={() => setTemporary(undefined)}>
+            Back
+          </button>
+        }
+      >
+        <p className="mb-3 text-sm text-frost-400">For this scenario only (and if it's reset). Your stored deck stays as it is.</p>
+        <DeckEditor character={character} cards={temporary} onChange={setTemporary} />
+        <div className="mt-3 flex items-center gap-2 text-sm">
+          <span className="text-frost-400">
+            {temporary.length}/{size}
+          </span>
+          <button className="btn btn-primary ml-auto" disabled={temporary.length < 2} onClick={() => send('hands.setup', { ...ref, cards: temporary }).catch(() => {})}>
+            Play this deck
+          </button>
+        </div>
+      </Panel>
+    );
+  }
+
   return (
-    <Panel title={`${gameManager.characterManager.characterName(character)} · pick ${size} cards`}>
-      <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
-        {available.map((a) => (
-          <CardView key={a.cardId} card={a} image={cardImage(images, character, a)} selected={chosen.includes(a.cardId!)} onClick={() => toggle(a.cardId!)} />
-        ))}
-      </div>
-      <div className="mt-3 flex items-center gap-2 text-sm">
-        <span className="text-frost-400">
-          {chosen.length}/{size}
-        </span>
-        <button
-          className="btn btn-primary ml-auto"
-          disabled={!chosen.length}
-          onClick={() => send('hands.setup', { edition: character.edition, name: character.name, cards: chosen }).catch(() => {})}
-        >
-          Take these cards
+    <Panel title={`${name} · which deck?`}>
+      <div className="grid gap-2 sm:grid-cols-2">
+        <button className="btn grid gap-0.5 p-3 text-left" disabled={(stored?.length ?? 0) < 2} onClick={() => send('hands.setup', ref).catch(() => {})}>
+          <span className="font-medium">Stored deck</span>
+          <span className="text-xs text-frost-400">
+            {!stored?.length
+              ? 'No stored deck yet: build one on the character page, or pick a temporary deck'
+              : saved
+                ? `${stored.length}/${size} cards, as saved on the character page`
+                : `All ${stored.length} unlocked cards (no deck saved on the character page yet)`}
+          </span>
+        </button>
+        <button className="btn grid gap-0.5 p-3 text-left" onClick={() => setTemporary(previous ?? stored ?? [])}>
+          <span className="font-medium">Temporary deck</span>
+          <span className="text-xs text-frost-400">{previous ? 'Your picks from before the scenario was reset' : 'Start from the stored deck and swap cards for this scenario'}</span>
         </button>
       </div>
     </Panel>
