@@ -1,6 +1,7 @@
-import { availablePerks, characterKey, describePerk, isClassUnlocked, isCrossoverCharacter, playableClasses } from '@fh/engine';
+import { availablePerks, characterKey, describePerk, handSize, isClassUnlocked, isCrossoverCharacter, playableClasses, storedDeck } from '@fh/engine';
 import { Character, gameManager, labelText } from '@fh/ghs-core';
 import { useEffect, useMemo, useState } from 'react';
+import { DeckEditor } from '../../components/AbilityCards';
 import { Boxes, NotesField, Panel, StatRow, Stepper } from '../../components/ui';
 import { api, type Me } from '../../lib/api';
 import { useCampaign } from '../../lib/campaign-store';
@@ -239,6 +240,8 @@ function CharacterSheet({ character, users }: { character: Character; users: Me[
         </Panel>
       </div>
 
+      <DeckPanel character={character} canEdit={canEdit} />
+
       <Downtime character={character} canEdit={canEdit} run={run} />
 
       <Panel title="Notes">
@@ -399,6 +402,41 @@ function RetiredPanel() {
           </li>
         ))}
       </ul>
+    </Panel>
+  );
+}
+
+/** The stored deck the character takes into scenarios; changed between scenarios. */
+function DeckPanel({ character, canEdit }: { character: Character; canEdit: boolean }) {
+  const { state, send } = useCampaign();
+  const me = useMe();
+  const key = characterKey(character);
+  const owner = state!.ext.characterOwners[key];
+  const hidden = state!.ext.mode === 'online' && !!owner && owner !== me.id;
+  const stored = storedDeck({ gm: gameManager }, state!.ext, character) ?? [];
+  const [cards, setCards] = useState(stored);
+  useEffect(() => setCards(stored), [stored.join()]); // eslint-disable-line react-hooks/exhaustive-deps
+  const inScenario = !!gameManager.game.scenario;
+  const size = handSize({ gm: gameManager }, character);
+  const change = (next: number[]) => {
+    setCards(next);
+    send('deck.set', { edition: character.edition, name: character.name, cards: next }).catch(() => setCards(stored));
+  };
+  return (
+    <Panel title="Deck" actions={!hidden && <span className="text-sm text-frost-400">{cards.length}/{size} cards</span>}>
+      {hidden ? (
+        <p className="text-sm text-frost-400">Only this character's player can see their deck.</p>
+      ) : (
+        <>
+          {inScenario ? (
+            <p className="mb-3 text-xs text-frost-400">The stored deck is locked during a scenario. A temporary deck can be picked when the scenario starts.</p>
+          ) : (
+            !state!.ext.decks?.[key] &&
+            canEdit && <p className="mb-3 text-xs text-frost-400">No deck saved yet. Pick the cards to take into scenarios; you can still swap them for a single scenario.</p>
+          )}
+          <DeckEditor character={character} cards={cards} onChange={change} disabled={!canEdit || inScenario} />
+        </>
+      )}
     </Panel>
   );
 }

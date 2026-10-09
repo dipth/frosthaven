@@ -111,3 +111,57 @@ it('drops hands when the scenario ends', () => {
   state = run(state, 'finish.apply', {});
   expect(state.ext.hands).toBeUndefined();
 });
+
+it('stores a deck between scenarios and plays it', () => {
+  let state = newCampaignState('x');
+  state.ext.mode = 'online';
+  state = run(state, 'character.add', drifter);
+  state = run(state, 'character.setOwner', { ...drifter, userId: 'alice' });
+  const deck = cards('drifter').slice(0, 8);
+  expect(() => run(state, 'deck.set', { ...drifter, cards: deck }, bob)).toThrow(/another player/);
+  expect(() => run(state, 'deck.set', { ...drifter, cards: [...deck, 99999] }, alice)).toThrow(/aren't available/);
+  state = run(state, 'deck.set', { ...drifter, cards: deck }, alice);
+  expect(state.ext.decks!['fh:drifter']).toEqual(deck);
+  expect(projectFor(state, 'bob').ext.decks!['fh:drifter']).toBeUndefined();
+
+  state = run(state, 'scenario.set', { index: '1' });
+  expect(() => run(state, 'deck.set', { ...drifter, cards: deck.slice(1) }, alice)).toThrow(/between scenarios/);
+  state = run(state, 'hands.setup', drifter, alice);
+  expect(state.ext.hands!['fh:drifter']!.hand).toEqual(deck);
+  expect(state.ext.scenarioDecks).toBeUndefined();
+});
+
+it('keeps a temporary deck across resets until the scenario closes', () => {
+  let state = setup();
+  const stored = cards('drifter').slice(0, 8);
+  const temporary = cards('drifter').slice(2, 10);
+  state = run(state, 'finish.start', { success: false });
+  state = run(state, 'finish.apply', {});
+  state = run(state, 'deck.set', { ...drifter, cards: stored }, alice);
+  state = run(state, 'scenario.set', { index: '1' });
+  state = run(state, 'hands.setup', { ...drifter, cards: temporary }, alice);
+  expect(state.ext.scenarioDecks!['fh:drifter']).toEqual(temporary);
+  expect(state.ext.decks!['fh:drifter']).toEqual(stored);
+
+  state = run(state, 'scenario.reset');
+  expect(state.ext.hands).toBeUndefined();
+  expect(state.ext.scenarioDecks!['fh:drifter']).toEqual(temporary);
+  state = run(state, 'hands.setup', drifter, alice);
+  expect(state.ext.hands!['fh:drifter']!.hand).toEqual(stored);
+
+  state = run(state, 'finish.start', { success: false });
+  state = run(state, 'finish.apply', {});
+  expect(state.ext.scenarioDecks).toBeUndefined();
+  expect(state.ext.decks!['fh:drifter']).toEqual(stored);
+});
+
+it('drops the deck of a retired character', () => {
+  let state = newCampaignState('x');
+  state = run(state, 'character.add', drifter);
+  state = run(state, 'deck.set', { ...drifter, cards: cards('drifter').slice(0, 4) });
+  state = run(state, 'character.setAside', drifter);
+  expect(state.ext.decks!['fh:drifter']).toHaveLength(4);
+  state = run(state, 'character.bringBack', drifter);
+  state = run(state, 'character.retire', drifter);
+  expect(state.ext.decks!['fh:drifter']).toBeUndefined();
+});

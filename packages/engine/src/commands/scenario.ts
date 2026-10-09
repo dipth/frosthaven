@@ -2,10 +2,14 @@ import { z } from 'zod';
 import { Scenario } from '@fh/ghs-core/vendor/game/model/Scenario';
 import { CommandError, defineCommand, type CommandDef, type Runtime } from '../runtime';
 
-/** Online mode: a (re)started scenario begins with an empty map and fresh hands. */
-function clearOnlineScenario(rt: Runtime) {
+/**
+ * Online mode: a (re)started scenario begins with an empty map and fresh
+ * hands. Temporary decks survive a reset but not a new scenario.
+ */
+function clearOnlineScenario(rt: Runtime, { reset = false } = {}) {
   delete rt.ext.board;
   delete rt.ext.hands;
+  if (!reset) delete rt.ext.scenarioDecks;
 }
 
 const scenarioSet = defineCommand({
@@ -35,7 +39,7 @@ const scenarioReset = defineCommand({
     rt.gm.stateManager.before('resetScenario', ...rt.gm.scenarioManager.scenarioUndoArgs());
     rt.gm.roundManager.resetScenario();
     rt.gm.scenarioManager.setScenario(rt.game.scenario);
-    clearOnlineScenario(rt);
+    clearOnlineScenario(rt, { reset: true });
     rt.gm.stateManager.after();
   }
 });

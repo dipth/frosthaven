@@ -43,6 +43,27 @@ export function handSize(rt: Pick<Runtime, 'gm'>, c: Character): number {
   return Number(rt.gm.getCharacterData(c.name, c.edition)?.handSize ?? 0);
 }
 
+/**
+ * The character's stored deck, without cards that are no longer available.
+ * Without a saved deck, all available cards when they fit in the hand.
+ */
+export function storedDeck(rt: Pick<Runtime, 'gm'>, ext: Pick<CampaignState['ext'], 'decks'>, c: Character): number[] | undefined {
+  const available = availableAbilityCards(rt, c).map((a) => a.cardId!);
+  const saved = ext.decks?.[characterKey(c)];
+  if (saved) return saved.filter((id) => available.includes(id));
+  return available.length <= handSize(rt, c) ? available : undefined;
+}
+
+/** Checks a deck of card ids against the character's available cards and hand size. */
+function validDeck(rt: Runtime, c: Character, cards: number[]): number[] {
+  const available = new Set(availableAbilityCards(rt, c).map((a) => a.cardId));
+  const deck = [...new Set(cards)];
+  if (deck.some((id) => !available.has(id))) throw new CommandError("Some of those cards aren't available to this character", 'invalid_payload');
+  const size = handSize(rt, c);
+  if (size && deck.length > size) throw new CommandError(`The hand holds ${size} cards`);
+  return deck;
+}
+
 function slotsOf(actions: Action[] | undefined): { xp: number }[] {
   return (actions ?? []).flatMap((action) => {
     const own = action.type === 'card' && String(action.value).startsWith('slot') ? [{ xp: Number(String(action.value).split(':')[1] ?? 0) }] : [];
@@ -95,19 +116,35 @@ function ready(h: HandState | undefined) {
 
 const commands: CommandDef[] = [
   defineCommand({
-    type: 'hands.setup',
+    type: 'deck.set',
     payload: ref.extend({ cards: z.array(z.number().int()).max(30) }),
     authorize,
     run(rt, payload) {
       const c = character(rt, payload);
-      const available = new Set(availableAbilityCards(rt, c).map((a) => a.cardId));
-      const cards = [...new Set(payload.cards)];
-      if (cards.some((id) => !available.has(id))) throw new CommandError("Some of those cards aren't available to this character", 'invalid_payload');
-      const size = handSize(rt, c);
-      if (size && cards.length > size) throw new CommandError(`The hand holds ${size} cards`);
-      if (rt.ext.hands?.[characterKey(c)] && rt.game.round > 0) throw new CommandError('The hand is fixed once the scenario has started');
-      (rt.ext.hands ??= {})[characterKey(c)] = { hand: cards, discard: [], lost: [], active: [], selected: [] };
-      rt.log(`${rt.gm.characterManager.characterName(c)} picked a hand of ${cards.length} cards`);
+      if (rt.game.scenario) throw new CommandError('Change your deck between scenarios; pick a temporary deck at the start of a scenario instead');
+      (rt.ext.decks ??= {})[characterKey(c)] = validDeck(rt, c, payload.cards);
+    }
+  }),
+  defineCommand({
+    type: 'hands.setup',
+    /** Without cards, the stored deck; with cards, a temporary deck for this scenario (kept across resets). */
+    payload: ref.extend({ cards: z.array(z.number().int()).max(30).optional() }),
+    authorize,
+    run(rt, payload) {
+      const c = character(rt, payload);
+      const key = characterKey(c);
+      if (rt.ext.hands?.[key] && rt.game.round > 0) throw new CommandError('The hand is fixed once the scenario has started');
+      let cards: number[];
+      if (payload.cards) {
+        cards = validDeck(rt, c, payload.cards);
+        (rt.ext.scenarioDecks ??= {})[key] = cards;
+      } else {
+        const stored = storedDeck(rt, rt.ext, c);
+        if (!stored?.length) throw new CommandError(`${rt.gm.characterManager.characterName(c)} has no stored deck yet`);
+        cards = stored;
+      }
+      (rt.ext.hands ??= {})[key] = { hand: [...cards], discard: [], lost: [], active: [], selected: [] };
+      rt.log(`${rt.gm.characterManager.characterName(c)} took ${payload.cards ? 'a temporary deck' : 'their stored deck'} of ${cards.length} cards`);
     }
   }),
   defineCommand({

@@ -1,9 +1,9 @@
-import { gameManager, type Game, type GameManager, type GameModel } from '@fh/ghs-core';
+import { Character, gameManager, type Game, type GameManager, type GameModel } from '@fh/ghs-core';
 import type { z } from 'zod';
 import { BuildingModel } from '@fh/ghs-core/vendor/game/model/Building';
 import { addCues, detectNarration } from './narration';
 import { applyRules, sessionRules, type CampaignRules } from './rules';
-import type { CampaignState, ExtState } from './state';
+import { characterKey, type CampaignState, type ExtState } from './state';
 
 export interface CommandContext {
   userId: string;
@@ -128,9 +128,16 @@ export function runCommand<S extends z.ZodType>(
   refreshDerived();
 
   if (!gameManager.game.scenario) {
-    // Hands and the board only exist during a scenario.
+    // Hands, temporary decks and the board only exist during a scenario.
     delete ext.hands;
+    delete ext.scenarioDecks;
     delete ext.board;
+  }
+  if (ext.decks) {
+    // Retired characters don't need a deck; set-aside ones keep theirs for when they come back.
+    const characters = [...gameManager.game.figures.filter((f) => f instanceof Character), ...(gameManager.game.party.availableCharacters ?? [])];
+    const kept = new Set(characters.map(characterKey));
+    for (const key of Object.keys(ext.decks)) if (!kept.has(key)) delete ext.decks[key];
   }
   const next: CampaignState = { ghs: snapshotGhs(), ext };
   addCues(
