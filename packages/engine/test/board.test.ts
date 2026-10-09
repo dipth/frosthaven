@@ -35,6 +35,15 @@ it('tracks figure positions and removed items for the current scenario', () => {
   expect(state.ext.board).toBeUndefined();
 });
 
+it('starts a reset scenario with an empty map', () => {
+  let state = run(newCampaignState('x'), 'character.add', { edition: 'fh', name: 'drifter' });
+  state = run(state, 'scenario.set', { index: '1' });
+  state = run(state, 'board.place', { placements: [{ ref: { kind: 'monster', edition: 'fh', name: 'hound', number: 1 }, hex: { x: 3, y: 3 } }] });
+  state = run(state, 'board.toggleItem', { id: '0:4', removed: true });
+  state = run(state, 'scenario.reset');
+  expect(state.ext.board).toBeUndefined();
+});
+
 it('drops a loot token where a normal or elite monster dies', () => {
   let state = run(newCampaignState('x'), 'character.add', { edition: 'fh', name: 'drifter' });
   state = run(state, 'scenario.set', { index: '1' });
