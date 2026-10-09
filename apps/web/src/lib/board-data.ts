@@ -1,4 +1,4 @@
-import type { BoardFile, TileOverride } from '@fh/engine';
+import type { BoardFile, BooksFile, TileOverride } from '@fh/engine';
 import { useEffect, useState } from 'react';
 import { api } from './api';
 
@@ -52,6 +52,11 @@ export function useBoard(scenario: string | undefined) {
 
 export function useImages() {
   return useLoaded<ImageIndex>('images.json') ?? undefined;
+}
+
+/** Where the scenario and section book pages are; undefined until loaded, null when missing. */
+export function useBooks() {
+  return useLoaded<BooksFile>('books.json');
 }
 
 export const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, '');

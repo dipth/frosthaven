@@ -2,6 +2,7 @@ import { conclusionChoices, type PendingConclusion } from '@fh/engine';
 import { gameManager } from '@fh/ghs-core';
 import { useState } from 'react';
 import { useCampaign } from '../lib/campaign-store';
+import { SectionLink } from './BookPages';
 import { Modal } from './ui';
 
 /** Sections the group has to read and resolve, shown on every campaign screen. */
@@ -18,7 +19,7 @@ export function PendingSections() {
       <ul className="grid gap-2">
         {pending.map((p) => (
           <li key={p.section} className="flex flex-wrap items-center gap-2 text-sm">
-            <span className="font-mono text-base">§{p.section}</span>
+            {p.edition === 'fh' ? <SectionLink section={p.section} className="font-mono text-base" /> : <span className="font-mono text-base">§{p.section}</span>}
             <span className="text-frost-400">{p.reason}</span>
             <span className="ml-auto flex gap-2">
               {p.kind === 'conclusion' ? (

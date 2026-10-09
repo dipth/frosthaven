@@ -63,7 +63,7 @@ Other tasks: `mise run test`, `mise run typecheck`, `mise run db:generate` (afte
   - Secretariat edition data (fh, fh-crossover, gh, fc, jotl);
   - fhtts scenario layouts;
   - Worldhaven image indexes.
-- `pnpm assets:sync` downloads about 6,300 Worldhaven images into `$ASSETS_DIR/worldhaven`. They are served only to signed-in users.
+- `pnpm assets:sync` downloads about 6,300 Worldhaven images, plus the scenario and section book PDFs (about 140 MB), into `$ASSETS_DIR/worldhaven`. They are served only to signed-in users. The app shows book pages from `generated/books.json`, which `data:sync` writes.
 - Online boards: `data:sync` also writes `generated/boards/<scenario>.json` (fhtts layouts in axial hex coordinates) and `generated/images.json`; `pnpm --filter @fh/data boards` rebuilds just those. Tile images are placed with `packages/data/tile-calibration.json` (committed). It was fitted with the Python tools in `packages/data/scripts/calibration/` (needs Pillow and numpy, and the synced images): `calibrate_tiles.py` finds each image's hex grid, `fit_content.py` aligns it using every scenario's content on that tile, and `render_board.py <scenario> out.png` renders a board to check the result.
 - To update Secretariat:
   1. Bump `ghs.commit` in `sources.json`.
