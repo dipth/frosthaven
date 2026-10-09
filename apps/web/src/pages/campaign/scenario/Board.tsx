@@ -899,6 +899,7 @@ function PieceView({
     <g
       transform={`translate(${at.x} ${at.y})`}
       opacity={ghost ? 0.75 : 1}
+      aria-label={`${piece.label}${piece.number ? ` ${piece.number}` : ''}`}
       onPointerDown={onPointerDown}
       onPointerEnter={(e) => e.pointerType === 'mouse' && onHover?.(true)}
       onPointerLeave={(e) => e.pointerType === 'mouse' && onHover?.(false)}

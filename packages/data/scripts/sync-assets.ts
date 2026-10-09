@@ -1,6 +1,7 @@
 /**
  * Downloads the Worldhaven images we use into ASSETS_DIR/worldhaven/<path>,
- * driven by the Worldhaven data indexes written by `pnpm data:sync`.
+ * driven by the Worldhaven data indexes written by `pnpm data:sync`, and the
+ * scenario and section book PDFs (see books.ts).
  *
  * Worldhaven's assets are licensed to its maintainer only. They are fetched
  * into private storage for this private group, never committed to git, never
@@ -11,6 +12,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { BOOKS } from './books';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const pkgRoot = resolve(here, '..');
@@ -59,6 +61,9 @@ function collect(): string[] {
         images.add(entry.image);
       }
     }
+  }
+  for (const file of [...BOOKS.scenario, ...BOOKS.section]) {
+    images.add(file.path);
   }
   return [...images].sort();
 }

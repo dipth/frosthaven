@@ -1,6 +1,7 @@
 import type { EntityRef } from '@fh/engine';
 import { Character, gameManager, GameState, labelText, Monster } from '@fh/ghs-core';
 import { useMemo, useState } from 'react';
+import { ScenarioBookButton, SectionLink } from '../../components/BookPages';
 import { AddInput, Panel } from '../../components/ui';
 import { useCampaign } from '../../lib/campaign-store';
 import { AttackHelper } from './scenario/AttackHelper';
@@ -27,13 +28,14 @@ export function ScenarioTab() {
   const hasAllies = figures.some((f) => f instanceof Monster && f.isAlly);
   const drawPhase = game.state === GameState.draw;
   const online = state!.ext.mode === 'online';
+  const title = labelText(gameManager.scenarioManager.scenarioTitle(scenario));
 
   return (
     <div className="grid gap-4">
       <div className="panel flex flex-wrap items-center gap-3 px-4 py-3">
         <div>
           <div className="font-medium">
-            #{scenario.index} {labelText(gameManager.scenarioManager.scenarioTitle(scenario))}
+            #{scenario.index} {title}
           </div>
           <div className="text-xs text-frost-400">
             Round {game.round} · {drawPhase ? 'choose initiatives' : 'in progress'} · <LevelControl />
@@ -41,6 +43,7 @@ export function ScenarioTab() {
         </div>
         <ElementBoard />
         <div className="ml-auto flex flex-wrap gap-2">
+          {!scenario.group && <ScenarioBookButton index={scenario.index} title={title} />}
           {!drawPhase && (
             <button className="btn" onClick={() => send('figure.next').catch(() => {})}>
               Next turn
@@ -72,6 +75,7 @@ export function ScenarioTab() {
           ))}
         </div>
         <aside className="grid content-start gap-3">
+          <SectionLog />
           <AmDeck deck="monster" attackModifierDeck={game.monsterAttackModifierDeck} title="Monster modifiers" />
           {hasAllies && <AmDeck deck="ally" attackModifierDeck={game.allyAttackModifierDeck} title="Ally modifiers" />}
           <LootDeck />
@@ -83,6 +87,27 @@ export function ScenarioTab() {
       {menu && <EntityMenu refs={menu} onClose={() => setMenu(undefined)} />}
       {ghs.finish && <FinishDialog />}
     </div>
+  );
+}
+
+/** Sections revealed in this scenario, in the order they were added. */
+function SectionLog() {
+  const sections = gameManager.game.sections;
+  return (
+    <Panel title="Sections revealed">
+      {sections.length === 0 ? (
+        <p className="text-sm text-frost-400">None yet.</p>
+      ) : (
+        <ol className="grid gap-1 text-sm">
+          {sections.map((section) => (
+            <li key={`${section.group ?? ''}-${section.index}`} className="flex items-baseline gap-2">
+              {section.group ? <span className="font-mono">§{section.index}</span> : <SectionLink section={section.index} className="font-mono" />}
+              {section.marker && <span className="text-frost-400">marker {section.marker}</span>}
+            </li>
+          ))}
+        </ol>
+      )}
+    </Panel>
   );
 }
 
@@ -199,9 +224,12 @@ function ScenarioSetup() {
           ))}
         </optgroup>
       </select>
-      <button className="btn btn-primary mt-3" disabled={!index} onClick={() => send('scenario.set', { index }).catch(() => {})}>
-        Set up scenario
-      </button>
+      <div className="mt-3 flex flex-wrap gap-2">
+        <button className="btn btn-primary" disabled={!index} onClick={() => send('scenario.set', { index }).catch(() => {})}>
+          Set up scenario
+        </button>
+        {index && <ScenarioBookButton index={index} title={scenarios.find((s) => s.index === index)?.name ?? ''} />}
+      </div>
     </Panel>
   );
 }

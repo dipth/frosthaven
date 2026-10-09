@@ -23,5 +23,6 @@ export * from './narration';
 export { availableAbilityCards, cardSlots, handSize } from './commands/hands';
 export { boardKey } from './commands/board-state';
 export * from './hex';
+export * from './books';
 export * from './checklist';
 export { gardenSlots } from './commands/garden-pets';

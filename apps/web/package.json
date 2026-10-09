@@ -13,6 +13,7 @@
   "dependencies": {
     "@fh/engine": "workspace:*",
     "@fh/ghs-core": "workspace:*",
+    "pdfjs-dist": "6.3.289",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
     "wouter": "^3.13.0",
