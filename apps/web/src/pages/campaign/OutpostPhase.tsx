@@ -175,7 +175,7 @@ function DowntimeOverview() {
         <Link href="/characters" className="underline">
           Characters
         </Link>{' '}
-        tab.
+        tab; new cards from levelling up are picked in its Deck panel.
       </p>
       <ul className="grid gap-1">
         {characters.map((c) => {
